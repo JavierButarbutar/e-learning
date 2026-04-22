@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/models/mapel_model.dart';
+import 'detail_materi_screen.dart';
 
 class MateriScreen extends StatelessWidget {
   final MapelModel mapel;
@@ -69,7 +70,7 @@ class MateriScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // Bagian-bagian materi
-                ...mapel.bagian.map((b) => _BagianSection(bagian: b)),
+                ...mapel.bagian.map((b) => _BagianSection(bagian: b, namaMapel: mapel.nama,),),
               ],
             ),
           ),
@@ -129,30 +130,50 @@ class _KuisBanner extends StatelessWidget {
 // ── Section bagian materi ─────────────────────────────────────
 class _BagianSection extends StatelessWidget {
   final BagianMateri bagian;
-  const _BagianSection({required this.bagian});
+  final String namaMapel;
+
+  const _BagianSection({
+    super.key,
+    required this.bagian,
+    required this.namaMapel,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label bagian
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(children: [
-            Container(width: 4, height: 18,
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 18,
                 decoration: BoxDecoration(
                   color: const Color(0xFF2E7D32),
                   borderRadius: BorderRadius.circular(2),
-                )),
-            const SizedBox(width: 8),
-            Text(bagian.judul,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                  color: Color(0xFF2E7D32), fontFamily: 'Poppins')),
-          ]),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                bagian.judul,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2E7D32),
+                ),
+              ),
+            ],
+          ),
         ),
-        ...bagian.items.map((item) => _MateriTile(item: item)),
-        const SizedBox(height: 6),
+
+        ...bagian.items.map(
+          (item) => _MateriTile(
+            item: item,
+            namaMapel: namaMapel,
+          ),
+        ),
       ],
     );
   }
@@ -161,32 +182,37 @@ class _BagianSection extends StatelessWidget {
 // ── Tile satu item materi ─────────────────────────────────────
 class _MateriTile extends StatelessWidget {
   final MateriItem item;
-  const _MateriTile({required this.item});
+  final String namaMapel;
+
+  const _MateriTile({
+    required this.item,
+    required this.namaMapel,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.push(context,
-        MaterialPageRoute(builder: (_) => _DetailMateriScreen(item: item))),
+        MaterialPageRoute(builder: (_) => DetailMateriScreen(item: item, namaMapel: namaMapel,))),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Row(children: [
           // Nomor
           Container(
-            width: 26, height: 26,
+            width: 40, height: 40,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Color(0xFFE8F5E9),
             ),
             child: Center(
               child: Text(item.nomor,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
                     color: Color(0xFF2E7D32), fontFamily: 'Poppins')),
             ),
           ),
@@ -194,12 +220,12 @@ class _MateriTile extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.judul,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
                     color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
               if (item.tanggal != null) ...[
                 const SizedBox(height: 2),
                 Text(item.tanggal!,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF888888),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF888888),
                       fontFamily: 'Poppins')),
               ],
             ]),
@@ -231,111 +257,6 @@ class _MateriTile extends StatelessWidget {
             const Icon(Icons.chevron_right_rounded,
                 color: Color(0xFFCCCCCC), size: 20),
         ]),
-      ),
-    );
-  }
-}
-
-// ── Detail isi materi ─────────────────────────────────────────
-class _DetailMateriScreen extends StatelessWidget {
-  final MateriItem item;
-  const _DetailMateriScreen({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-        title: Text(item.judul,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-              fontFamily: 'Poppins', color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Badge type
-            if (item.type != MateriType.materi)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: item.type == MateriType.tugas
-                      ? const Color(0xFFFF7043)
-                      : const Color(0xFF1E88E5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  item.type == MateriType.tugas ? 'Tugas' : 'Kuis',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                      color: Colors.white, fontFamily: 'Poppins')),
-              ),
-            if (item.type != MateriType.materi) const SizedBox(height: 14),
-
-            Text(item.judul,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
-            const SizedBox(height: 6),
-            if (item.tanggal != null)
-              Text('Diupload: ${item.tanggal}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF888888),
-                    fontFamily: 'Poppins')),
-            const SizedBox(height: 16),
-            const Divider(color: Color(0xFFEEEEEE)),
-            const SizedBox(height: 16),
-
-            // Konten dummy
-            if (item.konten != null)
-              Text(item.konten!,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF333333),
-                    fontFamily: 'Poppins', height: 1.8)),
-
-            const SizedBox(height: 30),
-
-            // Tombol upload jika tugas
-            if (item.type == MateriType.tugas) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
-                ),
-                child: Column(children: [
-                  const Icon(Icons.upload_file_outlined,
-                      size: 32, color: Color(0xFF888888)),
-                  const SizedBox(height: 8),
-                  const Text('Upload File PDF/Word',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF888888),
-                        fontFamily: 'Poppins')),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {}, // TODO: file picker
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Upload Tugas',
-                        style: TextStyle(fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ]),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
