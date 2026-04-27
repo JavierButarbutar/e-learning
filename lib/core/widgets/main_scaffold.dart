@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../home/dashboard_screen.dart';
-import '../../mapel/mapel_screen.dart';
-import '../../presensi/presensi_screen.dart';
-import '../../riwayat/riwayat_screen.dart';
-import '../../profile/profile_screen.dart';
+import '../../features/student/presentation/screen/dashboard_screen.dart';
+import '../../features/mapel/presentation/screens/mapel_screen.dart';
+import '../../features/presensi/presentation/screens/presensi_scan_screen.dart';
+import '../../features/riwayat/presentation/screens/riwayat_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});

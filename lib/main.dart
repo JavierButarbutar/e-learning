@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'splash/splash_screen.dart';
-import 'auth/login_screen.dart';
-import 'auth/forgot_password_screen.dart';
-import 'auth/reset_password_screen.dart';
-import 'auth/otp_screen.dart';
+import 'features/splash/presentation/screens/splash_screen.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/presentation/screens/forgot_password_screen.dart';
+import 'features/auth/presentation/screens/reset_password_screen.dart';
+import 'features/auth/presentation/screens/otp_screen.dart';
 import 'core/widgets/main_scaffold.dart';          // Siswa
-import 'guru/main_guru_scaffold.dart';              // Guru
+import 'features/guru/presentation/main_guru_scaffold.dart';              // Guru
 import 'core/theme/app_theme.dart';
 
 void main() async {
