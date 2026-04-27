@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../tugas/upload_tugas_screen.dart';
+import '../kuis/kuis_screen.dart';
 import '../core/models/mapel_model.dart';
 
 class DetailMateriScreen extends StatefulWidget {
@@ -509,7 +511,15 @@ class _KuisCard extends StatelessWidget {
             child: const Text('Batal',
               style: TextStyle(color: Color(0xFF888888), fontFamily: 'Poppins'))),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => KuisScreen(
+                  judulKuis: item.judul,
+                  durasiMenit: item.durasiMenit ?? 15,
+                  namaMapel: item.judul,
+                )));
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE65100),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -664,7 +674,13 @@ class _TugasCard extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: onUpload,
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => UploadTugasScreen(
+                            judulTugas: 'Tugas Makalah',
+                            deskripsiTugas: 'Buat makalah tentang materi ini. Minimal 5 halaman.',
+                            deadline: item.deadlineTugas ?? '-',
+                            namaMapel: 'Mata Pelajaran',
+                          ))),
                         icon: const Icon(Icons.upload_rounded, size: 18),
                         label: const Text('Upload',
                           style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700,

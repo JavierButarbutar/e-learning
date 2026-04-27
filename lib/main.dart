@@ -5,7 +5,8 @@ import 'auth/login_screen.dart';
 import 'auth/forgot_password_screen.dart';
 import 'auth/reset_password_screen.dart';
 import 'auth/otp_screen.dart';
-import 'core/widgets/main_scaffold.dart';
+import 'core/widgets/main_scaffold.dart';          // Siswa
+import 'guru/main_guru_scaffold.dart';              // Guru
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -15,11 +16,13 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+  // TODO: NotifikasiService.init(); — aktifkan setelah integrasi flutter_local_notifications
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -33,7 +36,8 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/reset-password':  (_) => const ResetPasswordScreen(),
         '/otp':             (_) => const OtpScreen(),
-        '/home':            (_) => const MainScaffold(),
+        '/home':            (_) => const MainScaffold(),       // Siswa
+        '/home-guru':       (_) => const MainGuruScaffold(),   // Guru
       },
     );
   }

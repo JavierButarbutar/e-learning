@@ -3,7 +3,7 @@ import '../../home/dashboard_screen.dart';
 import '../../mapel/mapel_screen.dart';
 import '../../presensi/presensi_screen.dart';
 import '../../riwayat/riwayat_screen.dart';
-import '../../settings/settings_screen.dart';
+import '../../profile/profile_screen.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -19,7 +19,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     MapelScreen(),
     PresensiScreen(),
     RiwayatScreen(),
-    SettingsScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -72,7 +72,7 @@ class _FloatingNavBar extends StatelessWidget {
     _NavData(icon: Icons.menu_book_outlined,        activeIcon: Icons.menu_book_rounded,        label: 'Mapel'),
     _NavData(icon: Icons.qr_code_scanner_rounded,  activeIcon: Icons.qr_code_scanner_rounded,  label: 'Presensi', isCenter: true),
     _NavData(icon: Icons.history_rounded,           activeIcon: Icons.history_rounded,           label: 'Riwayat'),
-    _NavData(icon: Icons.settings_outlined,         activeIcon: Icons.settings_rounded,          label: 'Settings'),
+    _NavData(icon: Icons.person_outlined,         activeIcon: Icons.person_rounded,          label: 'Profile'),
   ];
 
   @override

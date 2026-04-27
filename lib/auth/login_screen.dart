@@ -8,12 +8,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey  = GlobalKey<FormState>();
+  final _formKey   = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
-  bool _obscure   = true;
-  bool _remember  = false;
-  bool _loading   = false;
+
+  bool _obscure  = true;
+  bool _remember = false;
+  bool _loading  = false;
+
+  // Role yang dipilih: 'siswa' atau 'guru'
+  String _role = 'siswa';
 
   @override
   void dispose() {
@@ -22,19 +26,32 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ── Login handler ──────────────────────────────────────────
   void _login() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
 
-  setState(() => _loading = true);
+    // TODO: Ganti dengan API call nyata.
+    // Contoh:
+    // final res = await AuthService.login(
+    //   email: _emailCtrl.text,
+    //   password: _passCtrl.text,
+    //   role: _role,
+    // );
+    // if (res.role != _role) → tampilkan error "Role tidak sesuai"
 
-  await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 1500)); // simulasi
 
-  if (!mounted) return;
+    if (!mounted) return;
+    setState(() => _loading = false);
 
-  setState(() => _loading = false);
-
-  Navigator.pushReplacementNamed(context, '/home');
-}
+    // Arahkan berdasarkan role
+    if (_role == 'guru') {
+      Navigator.pushReplacementNamed(context, '/home-guru');
+    } else {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,20 +61,33 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Judul
+            // ── Judul ──
             const Text('Login',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
             const SizedBox(height: 4),
-            const Text('Login ke akunmu',
+            const Text('Masuk ke akunmu',
               style: TextStyle(fontSize: 13, color: Color(0xFF888888),
                   fontFamily: 'Poppins')),
             const SizedBox(height: 20),
 
-            // Email
+            // ── Toggle Siswa / Guru ──
+            _RoleToggle(
+              selected: _role,
+              onChanged: (r) => setState(() {
+                _role = r;
+                _emailCtrl.clear();
+                _passCtrl.clear();
+              }),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Email ──
             AuthField(
-              label: 'Email',
-              hint: 'Masukkan Email',
+              label: _role == 'guru' ? 'Email Guru' : 'Email Siswa',
+              hint: _role == 'guru'
+                  ? 'contoh@tutor.id'
+                  : 'contoh@student.ac.id',
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
               prefix: fieldIcon(Icons.email_outlined),
@@ -69,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Password
+            // ── Password ──
             AuthField(
               label: 'Password',
               hint: 'Masukkan Password',
@@ -77,9 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _passCtrl,
               prefix: fieldIcon(Icons.lock_outline_rounded),
               suffix: IconButton(
-                icon: Icon(_obscure ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                    size: 20, color: const Color(0xFF9E9E9E)),
+                icon: Icon(
+                  _obscure
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 20, color: const Color(0xFF9E9E9E)),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
               validator: (v) {
@@ -90,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Remember me + Lupa password
+            // ── Ingatkan saya + Lupa password ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -99,7 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 18, height: 18,
                     child: Checkbox(
                       value: _remember,
-                      onChanged: (v) => setState(() => _remember = v ?? false),
+                      onChanged: (v) =>
+                          setState(() => _remember = v ?? false),
                       activeColor: const Color(0xFF2E7D32),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4)),
@@ -112,24 +145,119 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontFamily: 'Poppins')),
                 ]),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero,
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/forgot-password'),
+                  style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 32)),
                   child: const Text('Lupa Password?',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
+                    style: TextStyle(fontSize: 13,
+                        color: Color(0xFF2E7D32),
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Poppins')),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Tombol masuk
-            GreenButton(label: 'Masuk Sekarang', onTap: _login, isLoading: _loading),
+            // ── Tombol masuk ──
+            GreenButton(
+              label: _role == 'guru'
+                  ? 'Masuk sebagai Guru'
+                  : 'Masuk sebagai Siswa',
+              onTap: _login,
+              isLoading: _loading,
+            ),
             const SizedBox(height: 28),
 
-            // Footer
+            // ── Footer ──
             const SecureFooter(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Widget toggle Siswa ↔ Guru
+// ─────────────────────────────────────────────────────────────
+class _RoleToggle extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onChanged;
+
+  const _RoleToggle({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F0),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(children: [
+        _RoleBtn(
+          label: 'Siswa',
+          icon: Icons.school_outlined,
+          active: selected == 'siswa',
+          onTap: () => onChanged('siswa'),
+        ),
+        _RoleBtn(
+          label: 'Guru',
+          icon: Icons.person_outline_rounded,
+          active: selected == 'guru',
+          onTap: () => onChanged('guru'),
+        ),
+      ]),
+    );
+  }
+}
+
+class _RoleBtn extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _RoleBtn({
+    required this.label, required this.icon,
+    required this.active, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFF2E7D32) : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: active
+                ? [BoxShadow(
+                    color: const Color(0xFF2E7D32).withOpacity(0.25),
+                    blurRadius: 8, offset: const Offset(0, 2))]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                size: 18,
+                color: active ? Colors.white : const Color(0xFF888888)),
+              const SizedBox(width: 6),
+              Text(label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Poppins',
+                  color: active ? Colors.white : const Color(0xFF888888),
+                )),
+            ],
+          ),
         ),
       ),
     );
