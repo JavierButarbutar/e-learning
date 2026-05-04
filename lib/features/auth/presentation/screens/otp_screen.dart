@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/network/api_service.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -47,20 +47,36 @@ class _OtpScreenState extends State<OtpScreen> {
     );
   }
 
-  void _resend() {
-    setState(() {
-      _seconds = 180;
+  void _resend() async {
+  final args =
+      ModalRoute.of(context)?.settings.arguments as Map?;
+  final email = args?['email'];
 
-      for (final c in _ctls) {
-        c.clear();
-      }
-    });
+  if (email == null) return;
 
-    FocusScope.of(context).requestFocus(_nodes[0]);
+  try {
+    await ApiService.sendOtp(email: email);
 
-    _timer?.cancel();
-    _startTimer();
-  }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('OTP berhasil dikirim ulang'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } catch (_) {}
+
+  setState(() {
+    _seconds = 180;
+    for (final c in _ctls) {
+      c.clear();
+    }
+  });
+
+  FocusScope.of(context).requestFocus(_nodes[0]);
+
+  _timer?.cancel();
+  _startTimer();
+}
 
   String get _timerLabel {
     final m = _seconds ~/ 60;
@@ -70,28 +86,75 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _verify() async {
-    final otp = _ctls.map((e) => e.text).join();
+  final otp = _ctls.map((e) => e.text).join();
 
-    if (otp.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Masukkan 4 digit kode OTP'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
+  if (otp.length < 4) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Masukkan 4 digit kode OTP'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
 
-    setState(() => _loading = true);
+  final args =
+      ModalRoute.of(context)?.settings.arguments as Map?;
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+  final email = args?['email'];
+
+  if (email == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email tidak ditemukan'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  setState(() => _loading = true);
+
+  try {
+    final result = await ApiService.verifyOtp(
+      email: email,
+      otp: otp,
+    );
 
     if (!mounted) return;
 
     setState(() => _loading = false);
 
-    Navigator.pushNamed(context, '/reset-password');
+    if (result['success'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // ✅ OTP valid → lanjut reset password
+    Navigator.pushNamed(
+      context,
+      '/reset-password',
+      arguments: {
+        'email': email,
+      },
+    );
+
+  } catch (e) {
+    setState(() => _loading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Terjadi kesalahan: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   @override
   void dispose() {

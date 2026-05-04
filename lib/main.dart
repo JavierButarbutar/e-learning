@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.theme,
       initialRoute: '/splash',
       routes: {
-        '/splash':          (_) => const SplashScreen(seenOnboarding: false),
+        '/splash': (_) => const SplashScreen(seenOnboarding: true),
         '/login':           (_) => const LoginScreen(),
         '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/reset-password':  (_) => const ResetPasswordScreen(),

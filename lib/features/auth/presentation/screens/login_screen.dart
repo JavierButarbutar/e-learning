@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../../../../core/widgets/app_textfield.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/storage/shared_pref.dart';
+import '../../../../core/network/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,26 +24,96 @@ class _LoginScreenState extends State<LoginScreen> {
   String _role = 'siswa';
 
   @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  void _loadUser() async {
+    final remember = await SharedPref.getRemember();
+
+    if (remember) {
+      final email = await SharedPref.getEmail();
+      final role = await SharedPref.getRole();
+
+      if (!mounted) return;
+
+      setState(() {
+        _remember = true;
+        _emailCtrl.text = email ?? '';
+        _role = role ?? 'siswa';
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
   }
 
+  // ================= LOGIN =================
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      final result = await ApiService.login(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text.trim(),
+      );
 
-    if (!mounted) return;
-    setState(() => _loading = false);
+      setState(() => _loading = false);
 
-    if (_role == 'guru') {
-      Navigator.pushReplacementNamed(context, '/home-guru');
-    } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      if (result['success'] == false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final data = result['data'] ?? {};
+
+      final token = data['token'] ?? '';
+      final user = data['user'] ?? {};
+
+      final role = user['role'] ?? 'siswa';
+      final email = user['email'] ?? _emailCtrl.text.trim();
+
+      await SharedPref.saveToken(token);
+      await SharedPref.saveUser(user);
+
+      await SharedPref.saveLogin(
+        email: email,
+        role: role,
+        remember: _remember,
+      );
+
+      await SharedPref.setLogin(true);
+
+      if (!mounted) return;
+
+      //NAVIGATION
+      if (role == 'guru') {
+        Navigator.pushReplacementNamed(context, '/home-guru');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+
+    } catch (e) {
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -58,10 +130,10 @@ class _LoginScreenState extends State<LoginScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1A1A),
                 fontFamily: 'Poppins',
               ),
             ),
+
             const SizedBox(height: 4),
 
             const Text(
@@ -137,54 +209,22 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Row(
                   children: [
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: Checkbox(
-                        value: _remember,
-                        onChanged: (v) {
-                          setState(() => _remember = v ?? false);
-                        },
-                        activeColor: const Color(0xFF2E7D32),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        side: const BorderSide(
-                          color: Color(0xFFCCCCCC),
-                        ),
-                      ),
+                    Checkbox(
+                      value: _remember,
+                      onChanged: (v) {
+                        setState(() => _remember = v ?? false);
+                      },
+                      activeColor: const Color(0xFF2E7D32),
                     ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Ingatkan Saya',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF555555),
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
+                    const Text('Ingatkan Saya'),
                   ],
                 ),
+
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/forgot-password',
-                    );
+                    Navigator.pushNamed(context, '/forgot-password');
                   },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 32),
-                  ),
-                  child: const Text(
-                    'Lupa Password?',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF2E7D32),
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
+                  child: const Text('Lupa Password?'),
                 ),
               ],
             ),
@@ -200,18 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             const SizedBox(height: 28),
-
-            const SecureFooter(),
           ],
         ),
       ),
     );
   }
 }
-
-// =====================================================
-// TOGGLE ROLE
-// =====================================================
 
 class _RoleToggle extends StatelessWidget {
   final String selected;
@@ -276,15 +310,6 @@ class _RoleBtn extends StatelessWidget {
                 ? const Color(0xFF2E7D32)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF2E7D32).withOpacity(0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

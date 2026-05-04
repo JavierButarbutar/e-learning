@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../../../../core/widgets/app_textfield.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/network/api_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -31,18 +32,46 @@ class _ResetPasswordScreenState
   }
 
   void _save() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+  final args =
+      ModalRoute.of(context)?.settings.arguments as Map?;
 
-    await Future.delayed(
-      const Duration(milliseconds: 1500),
+  final email = args?['email'];
+
+  if (email == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email tidak ditemukan'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  setState(() => _loading = true);
+
+  try {
+    final result = await ApiService.resetPassword(
+      email: email,
+      password: _newCtrl.text,
     );
 
     if (!mounted) return;
 
     setState(() => _loading = false);
 
+    if (result['success'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // ✅ sukses
     Navigator.pushNamedAndRemoveUntil(
       context,
       '/login',
@@ -55,8 +84,18 @@ class _ResetPasswordScreenState
         backgroundColor: Color(0xFF2E7D32),
       ),
     );
-  }
 
+  } catch (e) {
+    setState(() => _loading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Terjadi kesalahan: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(

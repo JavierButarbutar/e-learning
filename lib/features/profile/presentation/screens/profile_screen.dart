@@ -2,9 +2,38 @@ import 'package:flutter/material.dart';
 import 'informasi_pribadi_screen.dart';
 import 'email_screen.dart';
 import 'ubah_password_screen.dart';
+import '../../../../core/storage/shared_pref.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+  String name = 'Loading...';
+  String kelas = '-';
+  String email = '-';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  void _loadUser() async {
+  final user = await SharedPref.getUser();
+
+  if (!mounted) return;
+
+  setState(() {
+    email = user?['email'] ?? '-';
+    name = user?['name'] ?? 'User';
+    kelas = user?['kelas'] ?? '-';
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -12,29 +41,30 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       body: Column(
         children: [
-          // ── Header hijau dengan info profil ──
           _buildHeader(context),
 
-          // ── Body putih rounded ──
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Card statistik mata pelajaran
                   _StatCard(),
 
                   const SizedBox(height: 24),
 
-                  // Pengaturan Akun
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: const Text('Pengaturan Akun',
+                    child: const Text(
+                      'Pengaturan Akun',
                       style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w800,
-                        color: Color(0xFF1A1A1A), fontFamily: 'Poppins',
-                      )),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1A1A1A),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                   ),
+
                   const SizedBox(height: 12),
 
                   Padding(
@@ -50,27 +80,34 @@ class ProfileScreen extends StatelessWidget {
                           _MenuTile(
                             icon: Icons.person_outline_rounded,
                             label: 'Informasi Pribadi',
-                            onTap: () => Navigator.push(context,
+                            onTap: () => Navigator.push(
+                              context,
                               MaterialPageRoute(
-                                builder: (_) => const InformasiPribadiScreen())),
+                                builder: (_) => const InformasiPribadiScreen(),
+                              ),
+                            ),
                           ),
-                          const Divider(height: 1, indent: 56,
-                              color: Color(0xFFF0F0F0)),
+                          const Divider(height: 1, indent: 56),
                           _MenuTile(
                             icon: Icons.email_outlined,
                             label: 'Email',
-                            onTap: () => Navigator.push(context,
+                            onTap: () => Navigator.push(
+                              context,
                               MaterialPageRoute(
-                                builder: (_) => const EmailScreen())),
+                                builder: (_) => const EmailScreen(),
+                              ),
+                            ),
                           ),
-                          const Divider(height: 1, indent: 56,
-                              color: Color(0xFFF0F0F0)),
+                          const Divider(height: 1, indent: 56),
                           _MenuTile(
                             icon: Icons.lock_outline_rounded,
                             label: 'Ubah Password',
-                            onTap: () => Navigator.push(context,
+                            onTap: () => Navigator.push(
+                              context,
                               MaterialPageRoute(
-                                builder: (_) => const UbahPasswordScreen())),
+                                builder: (_) => const UbahPasswordScreen(),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -79,7 +116,6 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Tombol Keluar Akun
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: GestureDetector(
@@ -92,17 +128,19 @@ class ProfileScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFFFCDD2)),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(Icons.logout_rounded,
                                 color: Color(0xFFE53935), size: 20),
                             SizedBox(width: 8),
                             Text('Keluar Akun',
-                              style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w700,
-                                color: Color(0xFFE53935), fontFamily: 'Poppins',
-                              )),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFE53935),
+                                  fontFamily: 'Poppins',
+                                )),
                           ],
                         ),
                       ),
@@ -119,6 +157,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  // ================= HEADER (UI TIDAK DIUBAH) =================
   Widget _buildHeader(BuildContext context) {
     return Container(
       color: const Color(0xFF2E7D32),
@@ -127,99 +166,101 @@ class ProfileScreen extends StatelessWidget {
           20, MediaQuery.of(context).padding.top + 16, 20, 28),
       child: Column(
         children: [
-          // Judul halaman
           const Align(
             alignment: Alignment.centerLeft,
             child: Text('Profil Saya',
-              style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w800,
-                color: Colors.white, fontFamily: 'Poppins',
-              )),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontFamily: 'Poppins',
+                )),
           ),
+
           const SizedBox(height: 20),
 
-          // Avatar
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 88, height: 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFF5A623), width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 16, offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/avatar_placeholder.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: const Color(0xFFE8F5E9),
-                      child: const Icon(Icons.person_rounded,
-                          size: 48, color: Color(0xFF2E7D32)),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFF5A623), width: 3),
+            ),
+            child: const Icon(
+              Icons.person_rounded,
+              size: 48,
+              color: Color(0xFF2E7D32),
+            ),
           ),
+
           const SizedBox(height: 12),
 
-          // Nama
-          const Text('Muhammad Ibnu',
-            style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w800,
-              color: Colors.white, fontFamily: 'Poppins',
-            )),
-          const SizedBox(height: 4),
-          Text('Kelas 10 TKJ 1',
-            style: TextStyle(
-              fontSize: 13, color: Colors.white.withOpacity(0.75),
+          // 🔥 DATA DARI LOGIN
+          Text(
+            name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
               fontFamily: 'Poppins',
-            )),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            kelas,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withOpacity(0.75),
+              fontFamily: 'Poppins',
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            email,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.6),
+              fontFamily: 'Poppins',
+            ),
+          ),
         ],
       ),
     );
   }
 
+  // ================= LOGOUT (TETAP) =================
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Keluar Akun?',
-          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w800,
-              fontSize: 17)),
-        content: const Text('Apakah kamu yakin ingin keluar dari akun ini?',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 13,
-              color: Color(0xFF888888), height: 1.5)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text('Keluar Akun?'),
+        content: const Text('Apakah kamu yakin ingin keluar dari akun ini?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal',
-              style: TextStyle(color: Color(0xFF888888), fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600)),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              await SharedPref.logout();
+
+              if (!context.mounted) return;
+
               Navigator.pushNamedAndRemoveUntil(
-                  context, '/login', (_) => false);
+                context,
+                '/login',
+                (route) => false,
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Keluar',
-              style: TextStyle(fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w700)),
+            child: const Text('Keluar'),
           ),
         ],
       ),

@@ -4,22 +4,26 @@ class AppTextField extends StatelessWidget {
   final String label;
   final String hint;
   final TextEditingController controller;
-  final TextInputType keyboardType;
-  final bool obscureText;
+  final TextInputType? keyboardType;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
+  final bool obscureText;
   final String? Function(String?)? validator;
+
+  // 🔥 TAMBAHAN
+  final String? errorText;
 
   const AppTextField({
     super.key,
     required this.label,
     required this.hint,
     required this.controller,
-    this.keyboardType = TextInputType.text,
-    this.obscureText = false,
+    this.keyboardType,
     this.prefixIcon,
     this.suffixIcon,
+    this.obscureText = false,
     this.validator,
+    this.errorText, // 🔥 INI WAJIB
   });
 
   @override
@@ -27,6 +31,7 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // LABEL
         Text(
           label,
           style: const TextStyle(
@@ -38,52 +43,50 @@ class AppTextField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
 
+        // TEXTFIELD
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
           validator: validator,
-          style: const TextStyle(
-            fontSize: 13,
-            fontFamily: 'Poppins',
-          ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF9E9E9E),
-              fontFamily: 'Poppins',
-            ),
-            prefixIcon: prefixIcon != null
-                ? Icon(
-                    prefixIcon,
-                    size: 18,
-                    color: const Color(0xFF9E9E9E),
-                  )
-                : null,
+
+            prefixIcon:
+                prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
             suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: const Color(0xFFF5F5F5),
+
+            // 🔥 ERROR MASUK SINI
+            errorText: errorText,
+
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: 13,
+              vertical: 14,
             ),
+
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE0E0E0)),
+              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
             ),
+
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE0E0E0)),
+              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
             ),
+
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF2E7D32),
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Color(0xFF2E7D32)),
+            ),
+
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red),
             ),
           ),
         ),
