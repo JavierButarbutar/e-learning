@@ -15,7 +15,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String name = 'Loading...';
   String kelas = '-';
-  String email = '-';
+  String foto = '';
 
   @override
   void initState() {
@@ -29,9 +29,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   if (!mounted) return;
 
   setState(() {
-    email = user?['email'] ?? '-';
+
     name = user?['name'] ?? 'User';
     kelas = user?['kelas'] ?? '-';
+    foto = user?['foto'] ?? '';
   });
 }
 
@@ -187,11 +188,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: Colors.white,
               border: Border.all(color: const Color(0xFFF5A623), width: 3),
             ),
-            child: const Icon(
+            child: foto.toString().startsWith('http')
+    ? ClipOval(
+        child: Image.network(
+          foto,
+          fit: BoxFit.cover,
+          width: 88,
+          height: 88,
+          errorBuilder: (_, __, ___) {
+            return const Icon(
               Icons.person_rounded,
               size: 48,
               color: Color(0xFF2E7D32),
-            ),
+            );
+          },
+        ),
+      )
+    : const Icon(
+        Icons.person_rounded,
+        size: 48,
+        color: Color(0xFF2E7D32),
+      ),
           ),
 
           const SizedBox(height: 12),
@@ -220,14 +237,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const SizedBox(height: 4),
 
-          Text(
-            email,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.6),
-              fontFamily: 'Poppins',
-            ),
-          ),
         ],
       ),
     );

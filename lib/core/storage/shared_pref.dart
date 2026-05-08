@@ -13,38 +13,70 @@ class SharedPref {
     return await SharedPreferences.getInstance();
   }
 
-  static Future<void> setRemember(bool value) async {
-  final prefs = await _prefs();
-  await prefs.setBool(_rememberKey, value);
-}
+  // ================= USER =================
 
-  // ================= USER (FULL DATA) =================
+  /// 🔥 SIMPAN USER (dipakai saat login / fetch API)
   static Future<void> saveUser(Map<String, dynamic> user) async {
-  final prefs = await _prefs();
-  await prefs.setString(_userKey, jsonEncode(user));
-}
+    final prefs = await _prefs();
+    await prefs.setString(_userKey, jsonEncode(user));
+  }
 
-static Future<Map<String, dynamic>?> getUser() async {
-  final prefs = await _prefs();
-  final data = prefs.getString(_userKey);
+  /// 🔥 ALIAS BIAR GA ERROR DI SCREEN (setUser sering dipanggil)
+  static Future<void> setUser(Map<String, dynamic> user) async {
+    await saveUser(user);
+  }
 
-  if (data == null) return null;
+  /// 🔥 AMBIL USER (ANTI CRASH)
+  static Future<Map<String, dynamic>?> getUser() async {
+    final prefs = await _prefs();
+    final data = prefs.getString(_userKey);
 
-  try {
-    return jsonDecode(data);
-  } catch (e) {
+    if (data == null) return null;
+
+    try {
+      final decoded = jsonDecode(data);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 🔥 UPDATE SEBAGIAN DATA USER (tanpa overwrite semua)
+  static Future<void> updateUser(Map<String, dynamic> newData) async {
+    final prefs = await _prefs();
+
+    final currentUser = await getUser() ?? {};
+
+    currentUser.addAll(newData);
+
+    await prefs.setString(_userKey, jsonEncode(currentUser));
+  }
+
+  // ================= FOTO =================
+  static Future<String?> getFoto() async {
+    final user = await getUser();
+
+    final foto = user?['foto'];
+
+    if (foto != null &&
+        foto.toString().isNotEmpty &&
+        foto.toString().startsWith('http')) {
+      return foto.toString();
+    }
+
     return null;
   }
-}
 
-  // ================= SAVE LOGIN =================
+  // ================= LOGIN =================
   static Future<void> saveLogin({
     required String email,
     required String role,
     required bool remember,
   }) async {
     final prefs = await _prefs();
-
     await prefs.setString(_emailKey, email);
     await prefs.setString(_roleKey, role);
     await prefs.setBool(_rememberKey, remember);
@@ -61,7 +93,7 @@ static Future<Map<String, dynamic>?> getUser() async {
     return prefs.getString(_tokenKey);
   }
 
-  // ================= LOGIN STATUS =================
+  // ================= STATUS LOGIN =================
   static Future<void> setLogin(bool value) async {
     final prefs = await _prefs();
     await prefs.setBool(_isLoginKey, value);
@@ -72,7 +104,7 @@ static Future<Map<String, dynamic>?> getUser() async {
     return prefs.getBool(_isLoginKey) ?? false;
   }
 
-  // ================= GET DATA =================
+  // ================= GET BASIC DATA =================
   static Future<String?> getEmail() async {
     final prefs = await _prefs();
     return prefs.getString(_emailKey);
@@ -87,14 +119,12 @@ static Future<Map<String, dynamic>?> getUser() async {
     final prefs = await _prefs();
     return prefs.getBool(_rememberKey) ?? false;
   }
-
+  
   // ================= LOGOUT =================
   static Future<void> logout() async {
     final prefs = await _prefs();
 
     await prefs.setBool(_isLoginKey, false);
-
-    // hapus data penting
     await prefs.remove(_tokenKey);
     await prefs.remove(_userKey);
 
@@ -107,7 +137,7 @@ static Future<Map<String, dynamic>?> getUser() async {
     }
   }
 
-  // ================= CLEAR ALL (OPTIONAL) =================
+  // ================= CLEAR ALL =================
   static Future<void> clearAll() async {
     final prefs = await _prefs();
     await prefs.clear();

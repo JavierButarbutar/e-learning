@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   bool _remember = false;
   bool _loading = false;
-
   String _role = 'siswa';
 
   @override
@@ -54,68 +53,91 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ================= LOGIN =================
-  void _login() async {
-    if (!_formKey.currentState!.validate()) return;
+// ================= LOGIN =================
+void _login() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+  setState(() => _loading = true);
 
-    try {
-      final result = await ApiService.login(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text.trim(),
-      );
+  try {
+    final result = await ApiService.login(
+      email: _emailCtrl.text.trim(),
+      password: _passCtrl.text.trim(),
+      role: _role,
+    );
 
-      setState(() => _loading = false);
+    setState(() => _loading = false);
 
-      if (result['success'] == false) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      final data = result['data'] ?? {};
-
-      final token = data['token'] ?? '';
-      final user = data['user'] ?? {};
-
-      final role = user['role'] ?? 'siswa';
-      final email = user['email'] ?? _emailCtrl.text.trim();
-
-      await SharedPref.saveToken(token);
-      await SharedPref.saveUser(user);
-
-      await SharedPref.saveLogin(
-        email: email,
-        role: role,
-        remember: _remember,
-      );
-
-      await SharedPref.setLogin(true);
-
-      if (!mounted) return;
-
-      //NAVIGATION
-      if (role == 'guru') {
-        Navigator.pushReplacementNamed(context, '/home-guru');
-      } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-
-    } catch (e) {
-      setState(() => _loading = false);
-
+    if (result['success'] == false) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(result['message'])),
       );
+      return;
     }
+
+    final data = result['data'] ?? {};
+    final user = data['user'] ?? {};
+
+    final role = user['role'] ?? _role;
+
+    // ================= SAVE TOKEN =================
+    await SharedPref.saveToken(data['token'] ?? '');
+
+    // ================= SAVE USER =================
+    if (role == 'siswa') {
+      await SharedPref.saveUser({
+        'role': role,
+        'name': user['name'] ?? '-',
+        'email': user['email'] ?? '-',
+        'foto': user['foto'] ?? '',
+        'nisn': user['nisn'] ?? user['nis'] ?? '-',
+        'kelas': user['kelas'] ?? '-',
+      });
+    } else {
+      await SharedPref.saveUser({
+        'role': role,
+        'name': user['name'] ?? '-',
+        'email': user['email'] ?? '-',
+        'foto': user['foto'] ?? '',
+        'nip': user['nip'] ?? '-',
+        'nama_mapel': user['nama_mapel'] ?? '-',
+        'no_telp': user['no_telp'] ?? '-',
+        'alamat': user['alamat'] ?? '-',
+      });
+    }
+
+    // DEBUG
+    final savedUser = await SharedPref.getUser();
+    print("USER TERSIMPAN:");
+    print(savedUser);
+
+    // ================= REMEMBER LOGIN =================
+    await SharedPref.saveLogin(
+      email: user['email'] ?? '',
+      role: role,
+      remember: _remember,
+    );
+
+    await SharedPref.setLogin(true);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(
+      context,
+      role == 'guru' ? '/home-guru' : '/home',
+    );
+
+  } catch (e) {
+    setState(() => _loading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Terjadi kesalahan: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
