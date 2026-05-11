@@ -38,6 +38,14 @@ dependencies:
   http: ^1.2.0
   mobile_scanner: ^5.1.1
   permission_handler: ^11.3.1
+  provider: ^6.1.5+1
+  url_launcher: ^6.3.2
+  syncfusion_flutter_pdfviewer: ^27.1.57
+  file_picker: ^8.0.0
+  http_parser: ^4.0.0 
+  dio: ^5.4.0
+  path_provider: ^2.1.2
+  open_file: ^3.5.10
 
 dev_dependencies:
   flutter_test:

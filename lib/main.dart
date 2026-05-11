@@ -1,23 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/forgot_password_screen.dart';
 import 'features/auth/presentation/screens/reset_password_screen.dart';
 import 'features/auth/presentation/screens/otp_screen.dart';
-import 'core/widgets/main_scaffold.dart';          // Siswa
-import 'features/guru/presentation/main_guru_scaffold.dart';              // Guru
+
+import 'core/widgets/main_scaffold.dart';
+import 'features/guru/presentation/main_guru_scaffold.dart';
 import 'core/theme/app_theme.dart';
+
+import 'features/mapel/provider/mapel_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
-  // TODO: NotifikasiService.init(); — aktifkan setelah integrasi flutter_local_notifications
-  runApp(const MyApp());
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => MapelProvider(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -32,12 +52,12 @@ class MyApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (_) => const SplashScreen(seenOnboarding: true),
-        '/login':           (_) => const LoginScreen(),
+        '/login': (_) => const LoginScreen(),
         '/forgot-password': (_) => const ForgotPasswordScreen(),
-        '/reset-password':  (_) => const ResetPasswordScreen(),
-        '/otp':             (_) => const OtpScreen(),
-        '/home':            (_) => const MainScaffold(),       // Siswa
-        '/home-guru':       (_) => const MainGuruScaffold(),   // Guru
+        '/reset-password': (_) => const ResetPasswordScreen(),
+        '/otp': (_) => const OtpScreen(),
+        '/home': (_) => const MainScaffold(),
+        '/home-guru': (_) => const MainGuruScaffold(),
       },
     );
   }

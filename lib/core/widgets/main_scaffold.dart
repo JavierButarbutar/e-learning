@@ -14,18 +14,29 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
+  // ✅ FIX: PresensiScreen DIHAPUS dari list ini.
+  // Hanya 4 screen yang masuk IndexedStack.
+  // Index mapping: 0=Dashboard, 1=Mapel, 2=Riwayat, 3=Profile
   final List<Widget> _screens = const [
     DashboardScreen(),
     MapelScreen(),
-    PresensiScreen(),
     RiwayatScreen(),
     ProfileScreen(),
   ];
 
+  // ✅ Buka PresensiScreen via Navigator.push
+  // → widget baru dibuat HANYA saat tombol ditekan
+  // → kamera aktif HANYA saat halaman presensi terbuka
+  // → otomatis dispose saat kembali ke dashboard
+  void _openPresensi() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PresensiScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Navbar pill 68px tinggi, floating 16px dari bawah layar
-    // Total ruang yang perlu dicadangkan untuk konten = 68 + 16 + 8 = 92px
     const double reservedBottom = 92;
 
     return Scaffold(
@@ -33,7 +44,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Konten layar — mengisi semua area minus ruang navbar
+          // Konten layar — 4 screen saja, tanpa Presensi
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.only(bottom: reservedBottom),
@@ -46,7 +57,21 @@ class _MainScaffoldState extends State<MainScaffold> {
             left: 16, right: 16, bottom: 16,
             child: _FloatingNavBar(
               currentIndex: _currentIndex,
-              onTap: (i) => setState(() => _currentIndex = i),
+              onTap: (i) {
+                if (i == 2) {
+                  // ✅ Index 2 = tombol Presensi → push, jangan setState
+                  _openPresensi();
+                  return;
+                }
+                // Remap index karena slot 2 (Presensi) di-skip di _screens:
+                // tap 0 → _screens[0] Dashboard
+                // tap 1 → _screens[1] Mapel
+                // tap 2 → openPresensi (handled above)
+                // tap 3 → _screens[2] Riwayat
+                // tap 4 → _screens[3] Profile
+                final mapped = i > 2 ? i - 1 : i;
+                setState(() => _currentIndex = mapped);
+              },
             ),
           ),
         ],
@@ -56,10 +81,7 @@ class _MainScaffoldState extends State<MainScaffold> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Floating Navbar
-// Tombol Presensi menonjol ke atas menggunakan Stack bukan
-// Transform.translate (Transform tidak menambah layout space
-// sehingga menyebabkan overflow).
+// Floating Navbar — tidak ada perubahan visual
 // ─────────────────────────────────────────────────────────────
 class _FloatingNavBar extends StatelessWidget {
   final int currentIndex;
@@ -72,15 +94,27 @@ class _FloatingNavBar extends StatelessWidget {
     _NavData(icon: Icons.menu_book_outlined,        activeIcon: Icons.menu_book_rounded,        label: 'Mapel'),
     _NavData(icon: Icons.qr_code_scanner_rounded,  activeIcon: Icons.qr_code_scanner_rounded,  label: 'Presensi', isCenter: true),
     _NavData(icon: Icons.history_rounded,           activeIcon: Icons.history_rounded,           label: 'Riwayat'),
-    _NavData(icon: Icons.person_outlined,         activeIcon: Icons.person_rounded,          label: 'Profile'),
+    _NavData(icon: Icons.person_outlined,           activeIcon: Icons.person_rounded,            label: 'Profile'),
   ];
+
+  // ✅ Mapping: currentIndex dari _screens (0-3) → highlight index di navbar (0-4)
+  // _screens[0]=Dashboard → navbar[0]
+  // _screens[1]=Mapel     → navbar[1]
+  // _screens[2]=Riwayat   → navbar[3]
+  // _screens[3]=Profile   → navbar[4]
+  // navbar[2]=Presensi    → tidak pernah "active" karena push, bukan tab
+  int _navbarIndex(int screensIndex) {
+    if (screensIndex >= 2) return screensIndex + 1;
+    return screensIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Tinggi tombol presensi yang menonjol ke atas
     const double protrude = 22;
     const double pillHeight = 64;
     const double totalHeight = pillHeight + protrude;
+
+    final activeNavbar = _navbarIndex(currentIndex);
 
     return SizedBox(
       height: totalHeight,
@@ -88,7 +122,7 @@ class _FloatingNavBar extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
         children: [
-          // Pill putih — berada di bawah
+          // Pill putih
           Positioned(
             bottom: 0, left: 0, right: 0,
             child: Container(
@@ -107,9 +141,9 @@ class _FloatingNavBar extends StatelessWidget {
               child: Row(
                 children: List.generate(_items.length, (i) {
                   final item = _items[i];
-                  final active = i == currentIndex;
+                  final active = i == activeNavbar;
 
-                  // Slot tengah kosong — diisi tombol menonjol via Stack
+                  // Slot tengah — tombol presensi
                   if (item.isCenter) {
                     return Expanded(
                       child: GestureDetector(
@@ -118,16 +152,15 @@ class _FloatingNavBar extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            const SizedBox(height: 26), // ruang untuk lingkaran
+                            const SizedBox(height: 26),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text('Presensi',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: active
-                                      ? const Color(0xFF2E7D32)
-                                      : const Color(0xFF888888),
+                                  // Presensi tidak pernah "active" sebagai tab
+                                  color: const Color(0xFF888888),
                                   fontFamily: 'Poppins',
                                 )),
                             ),
@@ -171,7 +204,7 @@ class _FloatingNavBar extends StatelessWidget {
             ),
           ),
 
-          // Tombol presensi menonjol — di atas pill menggunakan Stack Positioned
+          // Tombol presensi menonjol
           Positioned(
             top: 0,
             child: GestureDetector(
