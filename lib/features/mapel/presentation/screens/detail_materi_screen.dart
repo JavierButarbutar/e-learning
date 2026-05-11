@@ -34,22 +34,18 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
   int  _totalPages   = 1;
   bool _isLoadingPdf = true;
 
-  // ── Key untuk SharedPreferences ──────────────────────────
-  // Unik per materi agar tidak tabrakan antar materi
   String get _prefKey => 'materi_selesai_${widget.item.id}';
 
-  // ── Apakah PDF sudah di halaman terakhir ─────────────────
   bool get _sudahHalamanTerakhir =>
       !_isLoadingPdf && (_totalPages <= 1 || _currentPage >= _totalPages);
 
-  // ─────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
     _loadProgress();
   }
-  // ── Load progress dari SharedPreferences ─────────────────
-  // ✅ FIX 1: Progress disimpan persistent, tidak hilang setelah logout
+
   Future<void> _loadProgress() async {
     final prefs     = await SharedPreferences.getInstance();
     final selesai   = prefs.getBool(_prefKey) ?? false;
@@ -74,7 +70,6 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
     if (mounted) setState(() => _isCompleted = selesai);
   }
 
-  // ── Simpan progress ke SharedPreferences ─────────────────
   Future<void> _selesaikanMateri() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, true);
@@ -130,15 +125,13 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
     );
   }
 }
-  // ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final item     = widget.item;
     final hasTugas = item.type == MateriType.tugas;
     final hasKuis  = item.type == MateriType.kuis;
 
-    // ✅ FIX 2: Tombol selesai SELALU tampil (tidak disembunyikan oleh tugas/kuis)
-    // ✅ FIX 3: Tombol selesai hanya aktif setelah PDF di halaman terakhir
+   
     final bolehSelesai = _sudahHalamanTerakhir && !_isCompleted;
 
     return Scaffold(
@@ -219,8 +212,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ── Tombol Selesai Dibaca ─────────────────
-                  // ✅ Selalu tampil, tapi ada hint jika belum halaman terakhir
+ 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
@@ -463,7 +455,6 @@ class _PdfViewer extends StatelessWidget {
             ]),
           ),
 
-          // Footer navigasi
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: const BoxDecoration(
@@ -544,9 +535,7 @@ class _NavBtn extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Kuis Card
-// ─────────────────────────────────────────────────────────────
+
 class _KuisCard extends StatelessWidget {
   final MateriItem item;
   const _KuisCard({required this.item});
@@ -580,9 +569,7 @@ class _KuisCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tugas Card
-// ─────────────────────────────────────────────────────────────
+
 class _TugasCard extends StatelessWidget {
   final MateriItem   item;
   final bool         sudahDikumpulkan;
