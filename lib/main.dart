@@ -13,6 +13,8 @@ import 'features/guru/presentation/main_guru_scaffold.dart';
 import 'core/theme/app_theme.dart';
 
 import 'features/mapel/provider/mapel_provider.dart';
+import 'features/presensi/provider/presensi_provider.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,10 @@ void main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => MapelProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => PresensiProvider(),
         ),
       ],
       child: const MyApp(),

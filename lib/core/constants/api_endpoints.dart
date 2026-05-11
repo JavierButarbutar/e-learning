@@ -1,6 +1,6 @@
 class ApiEndpoint {
   static const String baseUrl =
-      "https://scheduled-curve-construct-books.trycloudflare.com/api";
+      "https://crossword-cotton-loud-done.trycloudflare.com/api";
 
   static const login = "$baseUrl/auth/login";
   static const checkEmail = "$baseUrl/auth/check-email";
@@ -27,4 +27,9 @@ class ApiEndpoint {
       "$baseUrl/tugas/$idTugas/upload";
   
   static const String tugasSiswa = "$baseUrl/tugas";
+
+  static const String presensiAktif   = '$baseUrl/presensi/active';
+  static const String presensiScan    = '$baseUrl/presensi/scan';
+  static const String presensiRiwayat = '$baseUrl/presensi/riwayat';
+  static const String presensiRekap   = '$baseUrl/presensi/rekap';
 }
