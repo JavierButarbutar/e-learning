@@ -8,6 +8,7 @@ import '../../../mapel/data/models/mapel_model.dart';
 import '../../../mapel/data/models/progress_materi.dart';
 import '../../../mapel/presentation/screens/detail_materi_screen.dart';
 import '../../../../core/storage/shared_pref.dart';
+import '../../../presensi/provider/presensi_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,6 +26,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadUser();
+
+    @override
+void initState() {
+  super.initState();
+
+  _loadUser();
+
+  Future.microtask(() {
+    context.read<PresensiProvider>()
+      .fetchActivePresensi();
+
+    context.read<PresensiProvider>()
+      .fetchRiwayat();
+  });
+}
   }
 
   // ── Load nama dari SharedPreferences ─────────────────────
