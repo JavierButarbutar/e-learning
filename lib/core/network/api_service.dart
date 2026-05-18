@@ -4,103 +4,101 @@ import '../constants/api_endpoints.dart';
 
 class ApiService {
 
-  // ================= LOGIN (FIXED) =================
- static Future<Map<String, dynamic>> login({
-  required String email,
-  required String password,
-  required String role,
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.login),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "email": email,
-        "password": password,
-        "role": role,
-      }),
-    );
+  // ================= LOGIN =================
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+    // role dihapus — backend menentukan role dari database
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.login),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
 
-    final data = _safeDecode(response.body);
+      final data = _safeDecode(response.body);
 
-    return {
-      "success": data['success'] ?? false,
-      "message": data['message'] ?? '',
-      "data": data['data'],
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Tidak dapat terhubung ke server",
-    };
+      return {
+        "success": data['success'] ?? false,
+        "message": data['message'] ?? '',
+        "data": data['data'],
+      };
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Tidak dapat terhubung ke server",
+      };
+    }
   }
-}
 
+  // ================= GET STUDENT PROFILE =================
+  static Future<Map<String, dynamic>> getStudentProfile({
+    required String token,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiEndpoint.studentProfile),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
-// ================= GET STUDENT PROFILE =================
-static Future<Map<String, dynamic>> getStudentProfile({
-  required String token,
-}) async {
-  try {
-    final response = await http.get(
-      Uri.parse(ApiEndpoint.studentProfile),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
+      final data = _safeDecode(response.body);
 
-    final data = _safeDecode(response.body);
-
-    return {
-      "success": data['success'] ?? false,
-      "message": data['message'] ?? '',
-      "data": data['data'] ?? {},
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Tidak dapat terhubung ke server",
-      "data": {},
-    };
+      return {
+        "success": data['success'] ?? false,
+        "message": data['message'] ?? '',
+        "data": data['data'] ?? {},
+      };
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Tidak dapat terhubung ke server",
+        "data": {},
+      };
+    }
   }
-}
 
-// ================= UPDATE STUDENT PROFILE =================
-static Future<Map<String, dynamic>> updateStudentProfile({
-  required String token,
-  required Map<String, dynamic> data,
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.updateStudentProfile),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode(data),
-    );
+  // ================= UPDATE STUDENT PROFILE =================
+  static Future<Map<String, dynamic>> updateStudentProfile({
+    required String token,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.updateStudentProfile),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(data),
+      );
 
-    final res = _safeDecode(response.body);
+      final res = _safeDecode(response.body);
 
-    return {
-      "success": res['success'] ?? false,
-      "message": res['message'] ?? '',
-      "data": res['data'] ?? {},
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Tidak dapat terhubung ke server",
-      "data": {},
-    };
+      return {
+        "success": res['success'] ?? false,
+        "message": res['message'] ?? '',
+        "data": res['data'] ?? {},
+      };
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Tidak dapat terhubung ke server",
+        "data": {},
+      };
+    }
   }
-}
 
   // ================= CHECK EMAIL =================
   static Future<Map<String, dynamic>> checkEmail({
@@ -217,69 +215,69 @@ static Future<Map<String, dynamic>> updateStudentProfile({
   }
 
   // ================= UPDATE PASSWORD =================
-static Future<Map<String, dynamic>> updatePassword({
-  required String token,
-  required String oldPassword,
-  required String newPassword,
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.updatePassword),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "old_password": oldPassword,
-        "new_password": newPassword,
-      }),
-    );
+  static Future<Map<String, dynamic>> updatePassword({
+    required String token,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.updatePassword),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "old_password": oldPassword,
+          "new_password": newPassword,
+        }),
+      );
 
-    final data = _safeDecode(response.body);
+      final data = _safeDecode(response.body);
 
-    return {
-      "statusCode": response.statusCode,
-      "success": data['success'] ?? false,
-      "message": data['message'] ?? '',
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Tidak dapat terhubung ke server",
-    };
+      return {
+        "statusCode": response.statusCode,
+        "success": data['success'] ?? false,
+        "message": data['message'] ?? '',
+      };
+    } catch (e) {
+      return {
+        "success": false,
+        "message": "Tidak dapat terhubung ke server",
+      };
+    }
   }
-}
 
-// ================= UPDATE EMAIL =================
-static Future<Map<String, dynamic>> updateEmail({
-  required String token,
-  required String email,
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.updateEmail), // pastikan endpoint ada
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "email": email,
-      }),
-    );
+  // ================= UPDATE EMAIL =================
+  static Future<Map<String, dynamic>> updateEmail({
+    required String token,
+    required String email,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.updateEmail),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "email": email,
+        }),
+      );
 
-    final data = _safeDecode(response.body);
+      final data = _safeDecode(response.body);
 
-    return {
-      "success": data['success'] ?? false,
-      "message": data['message'] ?? '',
-      "data": data['data'],
-    };
-  } catch (e) {
-    return _errorResponse("Tidak dapat terhubung ke server");
+      return {
+        "success": data['success'] ?? false,
+        "message": data['message'] ?? '',
+        "data": data['data'],
+      };
+    } catch (e) {
+      return _errorResponse("Tidak dapat terhubung ke server");
+    }
   }
-}
 
   // ================= LOGOUT =================
   static Future<Map<String, dynamic>> logout({
@@ -310,11 +308,7 @@ static Future<Map<String, dynamic>> updateEmail({
   static Map<String, dynamic> _safeDecode(String body) {
     try {
       final decoded = jsonDecode(body);
-
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-
+      if (decoded is Map<String, dynamic>) return decoded;
       return {};
     } catch (_) {
       return {};

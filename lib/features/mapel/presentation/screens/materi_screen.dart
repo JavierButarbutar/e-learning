@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/mapel_model.dart';
 import '../../provider/mapel_provider.dart';
 import 'detail_materi_screen.dart';
+import '../../../kuis/presentation/screens/kuis_screen.dart';
 
 class MateriScreen extends StatefulWidget {
   final MapelModel mapel;
@@ -53,17 +54,34 @@ class _MateriScreenState extends State<MateriScreen> {
                 );
               }
 
-              // ── Kelompokkan berdasarkan minggu_ke / nomor ──
-              final grouped = _groupByMinggu(provider.materi);
+              // ── Pisahkan kuis dari materi/tugas ──
+              final allMateri = provider.materi;
+              final kuisItems = allMateri
+                  .where((e) => e.type == MateriType.kuis)
+                  .toList();
+              final materiOnly = allMateri
+                  .where((e) => e.type != MateriType.kuis)
+                  .toList();
+
+              final grouped = _groupByMinggu(materiOnly);
+              final hasKuis = kuisItems.isNotEmpty;
 
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                itemCount: grouped.length,
+                itemCount: grouped.length + (hasKuis ? 1 : 0),
                 itemBuilder: (context, i) {
-                  final section = grouped[i];
+                  // Index 0 = section kuis (jika ada)
+                  if (hasKuis && i == 0) {
+                    return _KuisSectionGroup(
+                      items: kuisItems,
+                      namaMapel: widget.mapel.nama,
+                    );
+                  }
+                  final sectionIndex = hasKuis ? i - 1 : i;
+                  final section = grouped[sectionIndex];
                   return _SectionGroup(
-                    judul:    section.judul,
-                    items:    section.items,
+                    judul: section.judul,
+                    items: section.items,
                     namaMapel: widget.mapel.nama,
                   );
                 },
@@ -84,7 +102,6 @@ class _MateriScreenState extends State<MateriScreen> {
       map.putIfAbsent(key, () => []).add(item);
     }
 
-    // Urutkan berdasarkan nomor minggu
     final sorted = map.entries.toList()
       ..sort((a, b) {
         final na = int.tryParse(a.key) ?? 999;
@@ -140,7 +157,6 @@ class _MateriScreenState extends State<MateriScreen> {
               ),
             ),
             child: Stack(children: [
-              // Dekorasi lingkaran di background
               Positioned(
                 right: -20, top: -20,
                 child: Container(
@@ -161,7 +177,6 @@ class _MateriScreenState extends State<MateriScreen> {
                   ),
                 ),
               ),
-              // Konten
               Padding(
                 padding: const EdgeInsets.all(18),
                 child: Column(
@@ -199,7 +214,77 @@ class _MateriSection {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Widget section (header + list tile)
+// Section khusus kuis — tampil di atas list materi
+// ─────────────────────────────────────────────────────────────
+class _KuisSectionGroup extends StatelessWidget {
+  final List<MateriItem> items;
+  final String namaMapel;
+
+  const _KuisSectionGroup({
+    required this.items,
+    required this.namaMapel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header section kuis
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10, top: 4),
+          child: Row(children: [
+            Container(
+              width: 4, height: 18,
+              decoration: BoxDecoration(
+              color: items.length == 1
+                  ? items.first.tipeKuis.iconBgColor
+                  : const Color(0xFFFF7043),                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('Kuis dan Ujian',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A),
+                  fontFamily: 'Poppins',
+                )),
+          ]),
+        ),
+
+        // Card berisi tile kuis
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEEEEEE)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: List.generate(items.length, (i) {
+              return _MateriTile(
+                item: items[i],
+                namaMapel: namaMapel,
+                isLast: i == items.length - 1,
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Widget section materi per minggu (header + list tile)
 // ─────────────────────────────────────────────────────────────
 class _SectionGroup extends StatelessWidget {
   final String judul;
@@ -217,7 +302,7 @@ class _SectionGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header section ───────────────────────────────
+        // Header section
         Padding(
           padding: const EdgeInsets.only(bottom: 10, top: 4),
           child: Row(children: [
@@ -237,7 +322,7 @@ class _SectionGroup extends StatelessWidget {
           ]),
         ),
 
-        // ── Card group ───────────────────────────────────
+        // Card group
         Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
@@ -270,7 +355,7 @@ class _SectionGroup extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Tile per materi
+// Tile per materi — navigasi berbeda untuk kuis
 // ─────────────────────────────────────────────────────────────
 class _MateriTile extends StatelessWidget {
   final MateriItem item;
@@ -283,19 +368,18 @@ class _MateriTile extends StatelessWidget {
     required this.isLast,
   });
 
-  // Warna berdasarkan tipe
   Color get _accentColor {
     switch (item.type) {
-      case MateriType.tugas: return const Color(0xFFF5A623); // kuning
-      case MateriType.kuis:  return const Color(0xFFFF7043); // orange
-      default:               return const Color(0xFF2E7D32); // hijau
+      case MateriType.tugas: return const Color(0xFFF5A623);
+      case MateriType.kuis:  return item.tipeKuis.iconBgColor; // biru/ungu/ungu gelap
+      default:               return const Color(0xFF2E7D32);
     }
   }
 
   Color get _bgColor {
     switch (item.type) {
       case MateriType.tugas: return const Color(0xFFFFF8E1);
-      case MateriType.kuis:  return const Color(0xFFFBE9E7);
+      case MateriType.kuis:  return item.tipeKuis.bgColor; // biru muda / ungu muda
       default:               return const Color(0xFFE8F5E9);
     }
   }
@@ -308,27 +392,44 @@ class _MateriTile extends StatelessWidget {
     }
   }
 
-  String? get _typeLabel {
+    String? get _typeLabel {
     switch (item.type) {
       case MateriType.tugas: return 'Tugas';
-      case MateriType.kuis:  return 'Kuis';
-      default:               return null;
+      case MateriType.kuis:  return item.tipeKuis.label;
+      default:               return null; // ← null bukan ''
+    }
+  }
+
+  void _onTap(BuildContext context) {
+    if (item.type == MateriType.kuis) {
+      // Kuis → langsung ke KuisScreen, lewati DetailMateriScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => KuisScreen(kuisId: int.parse(item.id)),
+        ),
+      );
+    } else {
+      // Materi & Tugas → ke DetailMateriScreen seperti biasa
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetailMateriScreen(
+            item: item,
+            namaMapel: namaMapel,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-        MaterialPageRoute(builder: (_) => DetailMateriScreen(
-          item: item,
-          namaMapel: namaMapel,
-        )),
-      ),
+      onTap: () => _onTap(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          // Warna latar tile sesuai tipe (subtle)
           color: item.type != MateriType.materi
               ? _bgColor.withOpacity(0.4)
               : Colors.white,
@@ -343,7 +444,7 @@ class _MateriTile extends StatelessWidget {
               : null,
         ),
         child: Row(children: [
-          // ── Nomor / ikon ─────────────────────────────
+          // Ikon
           Container(
             width: 42, height: 42,
             decoration: BoxDecoration(
@@ -358,7 +459,7 @@ class _MateriTile extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          // ── Judul & tanggal ──────────────────────────
+          // Judul & info tambahan
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +469,35 @@ class _MateriTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1A1A1A),
                         fontFamily: 'Poppins')),
-                if (item.tanggal != null) ...[
+                // Info durasi & soal untuk kuis
+                if (item.type == MateriType.kuis &&
+                    (item.durasiMenit != null || item.jumlahSoal != null)) ...[
+                  const SizedBox(height: 3),
+                  Row(children: [
+                    if (item.durasiMenit != null) ...[
+                      Icon(Icons.timer_outlined,
+                          size: 11, color: _accentColor),
+                      const SizedBox(width: 3),
+                      Text('${item.durasiMenit} menit',
+                          style: TextStyle(fontSize: 11,
+                              color: _accentColor,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600)),
+                    ],
+                    if (item.durasiMenit != null && item.jumlahSoal != null)
+                      const SizedBox(width: 8),
+                    if (item.jumlahSoal != null) ...[
+                      Icon(Icons.help_outline_rounded,
+                          size: 11, color: _accentColor),
+                      const SizedBox(width: 3),
+                      Text('${item.jumlahSoal} soal',
+                          style: TextStyle(fontSize: 11,
+                              color: _accentColor,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ]),
+                ] else if (item.tanggal != null) ...[
                   const SizedBox(height: 2),
                   Text(item.tanggal!,
                       style: const TextStyle(fontSize: 11,
@@ -381,7 +510,7 @@ class _MateriTile extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          // ── Badge tipe / chevron ─────────────────────
+          // Badge tipe / chevron
           if (_typeLabel != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../mapel/provider/mapel_provider.dart'; 
 import 'informasi_pribadi_screen.dart';
 import 'email_screen.dart';
 import 'ubah_password_screen.dart';
@@ -49,8 +51,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _StatCard(),
-
+                  Consumer<MapelProvider>(
+                      builder: (_, provider, __) => _StatCard(
+                        jumlahMapel: provider.mapel.length,
+                      ),
+                    ),
                   const SizedBox(height: 24),
 
                   Padding(
@@ -279,7 +284,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 // ── Stat card di bawah header ─────────────────────────────────
 class _StatCard extends StatelessWidget {
-  @override
+final int jumlahMapel;
+  const _StatCard({required this.jumlahMapel});  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -290,7 +296,7 @@ class _StatCard extends StatelessWidget {
           children: [
             _StatItem(
               icon: Icons.menu_book_rounded,
-              value: '12',
+              value: '$jumlahMapel',
               label: 'Mata Pelajaran',
               iconColor: const Color(0xFF2E7D32),
               iconBg: const Color(0xFFE8F5E9),

@@ -1,5 +1,5 @@
-// ===============================
-// mapel_model.dart
+// =============================== 
+// mapel_model.dart 
 // ===============================
 
 import 'package:flutter/material.dart';
@@ -65,6 +65,83 @@ class MapelModel {
 
 enum MateriType { materi, tugas, kuis }
 
+// ── Tipe kuis ─────────────────────────────────────────────────────────────────
+enum TipeKuisMateri { harianKuis, uts, uas }
+
+extension TipeKuisMateriX on TipeKuisMateri {
+  String get label {
+    switch (this) {
+      case TipeKuisMateri.harianKuis:
+        return 'Kuis Harian';
+      case TipeKuisMateri.uts:
+        return 'UTS';
+      case TipeKuisMateri.uas:
+        return 'UAS';
+    }
+  }
+
+  /// Warna background card
+  Color get bgColor {
+    switch (this) {
+      case TipeKuisMateri.harianKuis:
+        return const Color(0xFFE3F2FD); // biru muda
+      case TipeKuisMateri.uts:
+        return const Color(0xFFEDE7F6); // ungu muda
+      case TipeKuisMateri.uas:
+        return const Color(0xFFEDE7F6); // ungu muda
+    }
+  }
+
+  /// Warna border card
+  Color get borderColor {
+    switch (this) {
+      case TipeKuisMateri.harianKuis:
+        return const Color(0xFF90CAF9); // biru
+      case TipeKuisMateri.uts:
+        return const Color(0xFFCE93D8); // ungu
+      case TipeKuisMateri.uas:
+        return const Color(0xFFCE93D8); // ungu
+    }
+  }
+
+  /// Warna icon bulat
+  Color get iconBgColor {
+    switch (this) {
+      case TipeKuisMateri.harianKuis:
+        return const Color(0xFF1E88E5); // biru
+      case TipeKuisMateri.uts:
+        return const Color(0xFF7B1FA2); // ungu
+      case TipeKuisMateri.uas:
+        return const Color(0xFF6A1B9A); // ungu gelap
+    }
+  }
+
+  /// Warna teks judul
+  Color get textColor {
+    switch (this) {
+      case TipeKuisMateri.harianKuis:
+        return const Color(0xFF1565C0); // biru tua
+      case TipeKuisMateri.uts:
+        return const Color(0xFF6A1B9A); // ungu tua
+      case TipeKuisMateri.uas:
+        return const Color(0xFF4A148C); // ungu lebih tua
+    }
+  }
+
+  /// Parse dari string API
+  static TipeKuisMateri fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'uts':
+        return TipeKuisMateri.uts;
+      case 'uas':
+        return TipeKuisMateri.uas;
+      default:
+        return TipeKuisMateri.harianKuis;
+    }
+  }
+}
+
+// ── MateriItem ────────────────────────────────────────────────────────────────
 class MateriItem {
   final String id;
   final String nomor;
@@ -83,6 +160,7 @@ class MateriItem {
   // Kuis
   final int? jumlahSoal;
   final int? durasiMenit;
+  final TipeKuisMateri tipeKuis; // ← field baru
 
   // Tugas
   final String? deadlineTugas;
@@ -100,34 +178,34 @@ class MateriItem {
     this.ukuranFile,
     this.jumlahSoal,
     this.durasiMenit,
+    this.tipeKuis = TipeKuisMateri.harianKuis, // default kuis harian
     this.deadlineTugas,
     this.idTugas,
   });
 
   factory MateriItem.fromJson(Map<String, dynamic> json) {
-  // Cek apakah materi ini punya tugas terlampir
-  final tugasJson = json['tugas']; // ada di response GET /api/materi/{id}
-  final hasTugas = tugasJson != null;
+    final tugasJson = json['tugas'];
+    final hasTugas = tugasJson != null;
 
-  return MateriItem(
-    id: json['id_materi'].toString(),
-    nomor: json['minggu_ke']?.toString() ?? '01',
-    judul: json['judul_materi'] ?? '-',
-    tanggal: json['tanggal_upload'],
-    konten: json['deskripsi'],
-    namaFile: json['file_name'],
-    tipeFile: json['file_type'],
-    ukuranFile: json['file_size']?.toString(),
-    fileUrl: json['file_url'],
-    idTugas: tugasJson?['id_tugas']?.toString(),
+    // TODO: sesuaikan key 'tipe_kuis' dengan response API kuis nanti
+    final tipeKuisStr = json['tipe_kuis'] as String?;
 
-    // ✅ Deteksi type dari data yang ada
-    type: hasTugas ? MateriType.tugas : MateriType.materi,
-
-    // ✅ Ambil deadline dari nested tugas jika ada
-    deadlineTugas: tugasJson?['tanggal_deadline'],
-  );
-}
+    return MateriItem(
+      id: json['id_materi'].toString(),
+      nomor: json['minggu_ke']?.toString() ?? '01',
+      judul: json['judul_materi'] ?? '-',
+      tanggal: json['tanggal_upload'],
+      konten: json['deskripsi'],
+      namaFile: json['file_name'],
+      tipeFile: json['file_type'],
+      ukuranFile: json['file_size']?.toString(),
+      fileUrl: json['file_url'],
+      idTugas: tugasJson?['id_tugas']?.toString(),
+      type: hasTugas ? MateriType.tugas : _parseType(json['type']),
+      deadlineTugas: tugasJson?['tanggal_deadline'],
+      tipeKuis: TipeKuisMateriX.fromString(tipeKuisStr),
+    );
+  }
 
   static MateriType _parseType(String? type) {
     switch (type) {

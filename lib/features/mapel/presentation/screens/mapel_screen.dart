@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/models/mapel_model.dart';
 import '../../provider/mapel_provider.dart';
+import '../../../../core/storage/shared_pref.dart';
 import 'materi_screen.dart';
 
 class MapelScreen extends StatefulWidget {
@@ -18,12 +19,21 @@ class MapelScreen extends StatefulWidget {
 }
 
 class _MapelScreenState extends State<MapelScreen> {
+  String _name = 'Siswa';
   @override
   void initState() {
     super.initState();
-
+    _loadUser();
     Future.microtask(() {
       context.read<MapelProvider>().getMapel();
+    });
+  }
+
+  Future<void> _loadUser() async {
+    final user = await SharedPref.getUser();
+    if (!mounted) return;
+    setState(() {
+      _name = user?['name'] as String? ?? 'Siswa';
     });
   }
 
@@ -132,8 +142,8 @@ class _MapelScreenState extends State<MapelScreen> {
 
                           const SizedBox(height: 6),
 
-                          const Text(
-                            'Mulai Petualangan\nBelajar Kamu',
+                          Text(
+                            'Halo, $_name!',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
@@ -145,8 +155,8 @@ class _MapelScreenState extends State<MapelScreen> {
 
                           const SizedBox(height: 6),
 
-                          const Text(
-                            'Muhammad Ibnu',
+                         Text(
+                            _name,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

@@ -39,12 +39,8 @@ class MapelProvider extends ChangeNotifier {
         },
       );
 
-      print("STATUS MAPEL: ${response.statusCode}");
-      print("BODY MAPEL: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         _mapel = (data['data'] as List)
             .map((e) => MapelModel.fromJson(e))
             .toList();
@@ -64,60 +60,97 @@ class MapelProvider extends ChangeNotifier {
   // =========================
 
   Future<void> getMateri(String idMapel) async {
-  try {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
-    final token = await SharedPref.getToken();
-
-    // Step 1: ambil list materi
-    final response = await http.get(
-      Uri.parse(ApiEndpoint.materiByMapel(idMapel)),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
+      final token = await SharedPref.getToken();
       List<MateriItem> allMateri = [];
 
-      for (var minggu in data['data']) {
-        final materiList = minggu['materi'] as List;
+      // ── Step 1: Fetch list materi per minggu ──────────────────
+      final response = await http.get(
+        Uri.parse(ApiEndpoint.materiByMapel(idMapel)),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-        // Step 2: untuk tiap materi, fetch detail-nya agar dapat field 'tugas'
-        for (var m in materiList) {
-          final idMateri = m['id_materi'].toString();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-          final detailRes = await http.get(
-            Uri.parse(ApiEndpoint.detailMateri(idMateri)), // GET /api/materi/{id}
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          );
+        for (var minggu in data['data']) {
+          final materiList = minggu['materi'] as List;
 
-          if (detailRes.statusCode == 200) {
-            final detailData = jsonDecode(detailRes.body);
-            allMateri.add(MateriItem.fromJson(detailData['data']));
-          } else {
-            // Fallback: pakai data list tanpa info tugas
-            allMateri.add(MateriItem.fromJson(m));
+          for (var m in materiList) {
+            final idMateri = m['id_materi'].toString();
+
+            final detailRes = await http.get(
+              Uri.parse(ApiEndpoint.detailMateri(idMateri)),
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            );
+
+            if (detailRes.statusCode == 200) {
+              final detailData = jsonDecode(detailRes.body);
+              allMateri.add(MateriItem.fromJson(detailData['data']));
+            } else {
+              allMateri.add(MateriItem.fromJson(m));
+            }
           }
+        }
+      } else {
+        _error = 'Gagal mengambil materi';
+      }
+
+      // ── Step 2: Fetch kuis lalu filter berdasarkan mapel ──────
+      final kuisRes = await http.get(
+        Uri.parse(ApiEndpoint.kuis),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (kuisRes.statusCode == 200) {
+        final kuisData = jsonDecode(kuisRes.body);
+        final kuisList = kuisData['data'] as List? ?? [];
+
+        for (var k in kuisList) {
+          // Backend pakai ->with(['mapel']), id_mapel ada di nested object
+          final mapelId =
+              k['mapel']?['id_mapel']?.toString() ?? // nested (paling mungkin)
+              k['mapel_id']?.toString() ??            // flat langsung
+              k['id_mapel']?.toString() ??            // flat alternatif
+              '';
+
+          if (mapelId.isEmpty || mapelId != idMapel) continue;
+
+          final tipeKuisStr =
+              k['tipe_kuis']?.toString() ?? k['tipe']?.toString();
+
+          allMateri.add(MateriItem(
+            id: k['id_kuis'].toString(),
+            nomor: k['minggu_ke']?.toString() ?? '0',
+            judul: k['judul_kuis'] ?? k['judul'] ?? 'Kuis',
+            tanggal: k['tanggal_mulai'],
+            type: MateriType.kuis,
+            jumlahSoal: k['jumlah_soal'],
+            durasiMenit: k['durasi_menit'],
+            tipeKuis: TipeKuisMateriX.fromString(tipeKuisStr),
+          ));
         }
       }
 
       _materi = allMateri;
-    } else {
-      _error = 'Gagal mengambil materi';
+    } catch (e) {
+      _error = e.toString();
     }
-  } catch (e) {
-    _error = e.toString();
-  }
 
-  _isLoading = false;
-  notifyListeners();
-}}
+    _isLoading = false;
+    notifyListeners();
+  }
+}

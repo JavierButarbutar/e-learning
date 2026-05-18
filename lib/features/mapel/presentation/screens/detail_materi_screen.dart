@@ -3,10 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../kuis/presentation/screens/kuis_screen.dart';
 import '../../../tugas/presentation/screens/upload_tugas_screen.dart';
 import '../../data/models/mapel_model.dart';
 import '../../data/models/progress_materi.dart';
@@ -34,27 +32,21 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
   int  _totalPages   = 1;
   bool _isLoadingPdf = true;
 
-  // ── Key untuk SharedPreferences ──────────────────────────
-  // Unik per materi agar tidak tabrakan antar materi
   String get _prefKey => 'materi_selesai_${widget.item.id}';
 
-  // ── Apakah PDF sudah di halaman terakhir ─────────────────
   bool get _sudahHalamanTerakhir =>
       !_isLoadingPdf && (_totalPages <= 1 || _currentPage >= _totalPages);
 
-  // ─────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
     _loadProgress();
   }
-  // ── Load progress dari SharedPreferences ─────────────────
-  // ✅ FIX 1: Progress disimpan persistent, tidak hilang setelah logout
-  Future<void> _loadProgress() async {
-    final prefs     = await SharedPreferences.getInstance();
-    final selesai   = prefs.getBool(_prefKey) ?? false;
 
-    // Sync ke ProgressStore (in-memory) juga
+  Future<void> _loadProgress() async {
+    final prefs   = await SharedPreferences.getInstance();
+    final selesai = prefs.getBool(_prefKey) ?? false;
+
     final existing = ProgressStore.aktivitas
         .where((e) => e.materi == widget.item.judul);
 
@@ -74,7 +66,6 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
     if (mounted) setState(() => _isCompleted = selesai);
   }
 
-  // ── Simpan progress ke SharedPreferences ─────────────────
   Future<void> _selesaikanMateri() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, true);
@@ -95,50 +86,42 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
   }
 
   Future<void> _downloadPdf(String url, String fileName) async {
-  try {
+    try {
+      await Permission.storage.request();
 
-    await Permission.storage.request();
+      final dir = Directory('/storage/emulated/0/Download');
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
 
-    final dir = Directory('/storage/emulated/0/Download');
+      final filePath = "${dir.path}/$fileName.pdf";
+      await Dio().download(url, filePath);
 
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Download selesai: $fileName"),
+          backgroundColor: const Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal download PDF: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    final filePath = "${dir.path}/$fileName.pdf";
-
-    await Dio().download(url, filePath);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Download selesai: $fileName"),
-        backgroundColor: const Color(0xFF2E7D32),
-      ),
-    );
-
-  } catch (e) {
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Gagal download PDF: $e"),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
-  // ─────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final item     = widget.item;
+    // Kuis tidak akan pernah masuk ke sini karena navigasi sudah dipisah
+    // di _MateriTile. hasTugas saja yang perlu dicek.
     final hasTugas = item.type == MateriType.tugas;
-    final hasKuis  = item.type == MateriType.kuis;
 
-    // ✅ FIX 2: Tombol selesai SELALU tampil (tidak disembunyikan oleh tugas/kuis)
-    // ✅ FIX 3: Tombol selesai hanya aktif setelah PDF di halaman terakhir
     final bolehSelesai = _sudahHalamanTerakhir && !_isCompleted;
 
     return Scaffold(
@@ -153,8 +136,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  if (hasKuis) _KuisCard(item: item),
-
+                  // Judul materi
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
                     child: Text(
@@ -169,6 +151,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                     ),
                   ),
 
+                  // Info file
                   if (item.namaFile != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -194,6 +177,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                       ),
                     ),
 
+                  // PDF Viewer
                   _PdfViewer(
                     item: item,
                     controller: _pdfController,
@@ -219,8 +203,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ── Tombol Selesai Dibaca ─────────────────
-                  // ✅ Selalu tampil, tapi ada hint jika belum halaman terakhir
+                  // Tombol Selesai Dibaca
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
@@ -230,29 +213,28 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
-                                children: [
-                                  const Icon(Icons.info_outline_rounded,
-                                      size: 13, color: Color(0xFF888888)),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      'Baca hingga halaman terakhir untuk menyelesaikan materi '
-                                      '(Hal $_currentPage / $_totalPages)',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Color(0xFF888888),
-                                        fontFamily: 'Poppins',
-                                      ),
+                              children: [
+                                const Icon(Icons.info_outline_rounded,
+                                    size: 13, color: Color(0xFF888888)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Baca hingga halaman terakhir untuk menyelesaikan materi '
+                                    '(Hal $_currentPage / $_totalPages)',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF888888),
+                                      fontFamily: 'Poppins',
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                           ),
 
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            // Aktif jika sudah halaman terakhir & belum selesai
                             onPressed: bolehSelesai ? _selesaikanMateri : null,
                             icon: Icon(_isCompleted
                                 ? Icons.check_circle_rounded
@@ -286,7 +268,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                     ),
                   ),
 
-                  // ── Card Tugas (jika ada) ─────────────────
+                  // Card Tugas (jika ada)
                   if (hasTugas) ...[
                     const SizedBox(height: 12),
                     _TugasCard(
@@ -379,7 +361,7 @@ class _PdfViewer extends StatelessWidget {
     required this.isLoading,
     required this.onDocumentLoaded,
     required this.onPageChanged,
-    required this.onDownload
+    required this.onDownload,
   });
 
   @override
@@ -488,7 +470,7 @@ class _PdfViewer extends StatelessWidget {
                 IconButton(
                   onPressed: onDownload,
                   icon: const Icon(Icons.download_rounded,
-                  color: Color(0xFF2E7D32)),
+                      color: Color(0xFF2E7D32)),
                   tooltip: 'Download PDF',
                 ),
                 GestureDetector(
@@ -545,42 +527,6 @@ class _NavBtn extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Kuis Card
-// ─────────────────────────────────────────────────────────────
-class _KuisCard extends StatelessWidget {
-  final MateriItem item;
-  const _KuisCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFE082)),
-      ),
-      child: Row(children: [
-        Container(
-          width: 46, height: 46,
-          decoration: BoxDecoration(
-              color: const Color(0xFFFF8F00),
-              borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.quiz_outlined, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 14),
-        const Expanded(
-          child: Text('Kuis Evaluasi',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
-                  color: Color(0xFFE65100), fontFamily: 'Poppins')),
-        ),
-      ]),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
 // Tugas Card
 // ─────────────────────────────────────────────────────────────
 class _TugasCard extends StatelessWidget {
@@ -624,7 +570,6 @@ class _TugasCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info deadline tugas
                 if (item.deadlineTugas != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),

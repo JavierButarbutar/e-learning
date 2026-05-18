@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../provider/notifikasi_provider.dart';
+import '../widgets/notifikasi_item.dart';
 
-class NotifikasiScreen extends StatelessWidget {
+class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
 
-  static const List<_NotifData> _notifs = [
-    _NotifData(icon: Icons.assignment_outlined, iconBg: Color(0xFFFFF3E0), iconColor: Color(0xFFF5A623),
-        title: 'Tugas Baru - IPAS', body: 'Guru telah mengupload tugas baru: "Sel dan Jaringan Makhluk Hidup"', time: '10 menit yang lalu', isUnread: true, actionLabel: 'Lihat Tugas'),
-    _NotifData(icon: Icons.qr_code_scanner_rounded, iconBg: Color(0xFFE8F5E9), iconColor: Color(0xFF2E7D32),
-        title: 'Presensi Dibuka', body: 'Guru membuka presensi untuk Matematika - Hari ini', time: '1 jam yang lalu', isUnread: true, actionLabel: 'Presensi Sekarang'),
-    _NotifData(icon: Icons.timer_outlined, iconBg: Color(0xFFFCE4EC), iconColor: Color(0xFFE91E63),
-        title: 'Deadline Besok!', body: 'Tugas "Bahasa Indonesia Bab 3" deadline besok jam 23:59', time: '3 jam yang lalu', isUnread: false),
-    _NotifData(icon: Icons.menu_book_outlined, iconBg: Color(0xFFE8F5E9), iconColor: Color(0xFF2E7D32),
-        title: 'Materi Baru - Matematika', body: 'Guru mengupload materi baru: "Persamaan Kuadrat"', time: 'Kemarin', isUnread: false),
-    _NotifData(icon: Icons.quiz_outlined, iconBg: Color(0xFFE3F2FD), iconColor: Color(0xFF1E88E5),
-        title: 'Kuis Tersedia - IPAS', body: 'Kuis Evaluasi Bab 1 sudah tersedia. Segera kerjakan!', time: '2 hari lalu', isUnread: false),
-  ];
+  @override
+  State<NotifikasiScreen> createState() => _NotifikasiScreenState();
+}
+
+class _NotifikasiScreenState extends State<NotifikasiScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotifikasiProvider>().loadNotifikasi(refresh: true);
+    });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        context.read<NotifikasiProvider>().loadNotifikasi();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,101 +42,82 @@ class NotifikasiScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Notifikasi',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A1A1A),
+                fontFamily: 'Poppins')),
         centerTitle: false,
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () =>
+                context.read<NotifikasiProvider>().bacaSemua(),
             child: const Text('Tandai dibaca',
-              style: TextStyle(fontSize: 12, color: Color(0xFF2E7D32),
-                  fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2E7D32),
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(14),
-        itemCount: _notifs.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (_, i) => _NotifCard(data: _notifs[i]),
+      body: Consumer<NotifikasiProvider>(
+        builder: (context, prov, _) {
+          if (prov.isLoading && prov.list.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (prov.error != null && prov.list.isEmpty) {
+            return Center(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                const SizedBox(height: 8),
+                Text(prov.error!,
+                    style: const TextStyle(fontFamily: 'Poppins')),
+                TextButton(
+                    onPressed: () => prov.loadNotifikasi(refresh: true),
+                    child: const Text('Coba Lagi')),
+              ]),
+            );
+          }
+
+          if (prov.list.isEmpty) {
+            return const Center(
+              child: Text('Belum ada notifikasi',
+                  style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => prov.loadNotifikasi(refresh: true),
+            child: ListView.separated(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(14),
+              itemCount: prov.list.length + (prov.hasMore ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (_, i) {
+                if (i == prov.list.length) {
+                  return const Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+                final notif = prov.list[i];
+                return NotifikasiItem(
+                  notif: notif,
+                  onTap: () => prov.bacaNotifikasi(notif.idNotifikasi),
+                );
+              },
+            ),
+          );
+        },
       ),
-    );
-  }
-}
-
-class _NotifData {
-  final IconData icon;
-  final Color iconBg, iconColor;
-  final String title, body, time;
-  final bool isUnread;
-  final String? actionLabel;
-
-  const _NotifData({required this.icon, required this.iconBg, required this.iconColor,
-      required this.title, required this.body, required this.time,
-      required this.isUnread, this.actionLabel});
-}
-
-class _NotifCard extends StatelessWidget {
-  final _NotifData data;
-  const _NotifCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEEEEEE)),
-      ),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 38, height: 38,
-          decoration: BoxDecoration(color: data.iconBg, borderRadius: BorderRadius.circular(10)),
-          child: Icon(data.icon, color: data.iconColor, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(data.title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
-            const SizedBox(height: 3),
-            Text(data.body,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF888888),
-                  fontFamily: 'Poppins', height: 1.5)),
-            const SizedBox(height: 4),
-            Text(data.time,
-              style: const TextStyle(fontSize: 10, color: Color(0xFFBBBBBB), fontFamily: 'Poppins')),
-            if (data.actionLabel != null) ...[
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () {},
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(data.actionLabel!,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                        color: Colors.white, fontFamily: 'Poppins')),
-                ),
-              ),
-            ],
-          ]),
-        ),
-        if (data.isUnread)
-          Container(
-            width: 8, height: 8,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF44336)),
-          ),
-      ]),
     );
   }
 }
