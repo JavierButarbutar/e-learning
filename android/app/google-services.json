@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "561782062042",
+    "project_id": "sikanta-adf18",
+    "storage_bucket": "sikanta-adf18.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561782062042:android:d13d15c4e00ed829ec1ee3",
+        "android_client_info": {
+          "package_name": "com.example.e_learning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPGmv9cEoo9FymsL_y0etVyu2RaHjBUMA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

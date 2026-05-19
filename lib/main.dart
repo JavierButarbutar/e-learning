@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
@@ -14,10 +15,18 @@ import 'core/theme/app_theme.dart';
 
 import 'features/mapel/provider/mapel_provider.dart';
 import 'features/presensi/provider/presensi_provider.dart';
+import 'features/auth/provider/auth_provider.dart';
+import 'features/kuis/provider/kuis_provider.dart';
+import 'features/notifikasi/provider/notifikasi_provider.dart';
+
+import 'features/notifikasi/data/services/notifikasi_service.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
+   await NotifikasiService.init(); 
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -39,6 +48,18 @@ void main() async {
 
         ChangeNotifierProvider(
           create: (_) => PresensiProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => KuisProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => NotifikasiProvider(),
         ),
       ],
       child: const MyApp(),
