@@ -87,15 +87,22 @@ class NotifikasiService {
 
   // Daftarkan token FCM ke backend
   static Future<void> _registerToken() async {
+  try {
     final fcmToken = await FirebaseMessaging.instance.getToken();
-     print("FCM TOKEN: $fcmToken");
+    print("FCM TOKEN: $fcmToken");
     if (fcmToken != null) {
       await NotifikasiRepository.updateFcmToken(fcmToken);
     }
-
-    // Refresh token otomatis jika berubah
-    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      NotifikasiRepository.updateFcmToken(newToken);
-    });
+  } catch (e) {
+    // Server mati / network error → skip saja, tidak block app
+    print("FCM token registration skipped: $e");
   }
+
+  // Refresh token tetap jalan meskipun registrasi awal gagal
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+    NotifikasiRepository.updateFcmToken(newToken).catchError((e) {
+      print("FCM token refresh failed: $e");
+    });
+  });
+}
 }

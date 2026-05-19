@@ -4,7 +4,7 @@ import '../models/notifikasi_model.dart';
 import '../../../../core/storage/shared_pref.dart'; // sesuaikan path SharedPref-mu
 
 class NotifikasiRepository {
-  static const String _baseUrl = 'http://192.168.137.1:8000/api'; // ganti domain
+  static const String _baseUrl = 'https://readings-awareness-freight-maximize.trycloudflare.com/api'; // ganti domain
 
   // ── GET /api/notifikasi ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {
@@ -86,15 +86,19 @@ class NotifikasiRepository {
 
   // ── POST /api/notifikasi/update-token ────────────────────────────────────
   static Future<void> updateFcmToken(String fcmToken) async {
-    final token = await SharedPref.getToken();
-    await http.post(
-      Uri.parse('$_baseUrl/notifikasi/update-token'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'fcm_token': fcmToken}),
-    );
-  }
+  final token = await SharedPref.getToken();
+  
+  // Kalau belum login (token null), skip
+  if (token == null) return;
+
+  await http.post(
+    Uri.parse('$_baseUrl/notifikasi/update-token'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({'fcm_token': fcmToken}),
+  ).timeout(const Duration(seconds: 8)); // tidak hang terlalu lama
+}
 }
