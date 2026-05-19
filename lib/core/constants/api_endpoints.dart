@@ -1,6 +1,6 @@
 class ApiEndpoint {
   static const String baseUrl =
-      "http://192.168.137.1:8000/api";
+      "https://readings-awareness-freight-maximize.trycloudflare.com/api";
 
   static const login = "$baseUrl/auth/login";
   static const checkEmail = "$baseUrl/auth/check-email";
