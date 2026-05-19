@@ -445,7 +445,6 @@ class _PdfViewer extends StatelessWidget {
             ]),
           ),
 
-          // Footer navigasi
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: const BoxDecoration(
