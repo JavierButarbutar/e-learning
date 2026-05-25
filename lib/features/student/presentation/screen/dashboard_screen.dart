@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../../notifikasi/provider/notifikasi_provider.dart';
 import '../../../mapel/provider/mapel_provider.dart';
 import '../../../notifikasi/presentation/screens/notifikasi_screen.dart';
 import '../../../mapel/presentation/screens/mapel_screen.dart';
@@ -412,50 +412,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
 
           GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    const NotifikasiScreen(),
+  onTap: () async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const NotifikasiScreen(),
+      ),
+    );
+    // Refresh unread count setelah balik
+    if (context.mounted) {
+      context.read<NotifikasiProvider>().loadNotifikasi(refresh: true);
+    }
+  },
+  child: Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.2),
+        ),
+        child: const Icon(
+          Icons.notifications_outlined,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
+
+      // Badge unread count
+      Consumer<NotifikasiProvider>(
+        builder: (context, prov, _) {
+          if (prov.unreadCount == 0) return const SizedBox.shrink();
+          return Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 4, vertical: 1),
+              constraints: const BoxConstraints(
+                  minWidth: 16, minHeight: 16),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: const Color(0xFF2E7D32), width: 1.5),
+              ),
+              child: Text(
+                prov.unreadCount > 99
+                    ? '99+'
+                    : '${prov.unreadCount}',
+                style: const TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontFamily: 'Poppins',
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-            child: Stack(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        Colors.white.withOpacity(0.2),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red,
-                      border: Border.all(
-                        color:
-                            const Color(0xFF2E7D32),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          );
+        },
+      ),
+    ],
+  ),
+),
 
           const SizedBox(width: 10),
 

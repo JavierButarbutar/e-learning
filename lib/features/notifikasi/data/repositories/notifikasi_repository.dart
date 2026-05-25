@@ -4,7 +4,7 @@ import '../models/notifikasi_model.dart';
 import '../../../../core/storage/shared_pref.dart'; // sesuaikan path SharedPref-mu
 
 class NotifikasiRepository {
-  static const String _baseUrl = 'https://readings-awareness-freight-maximize.trycloudflare.com/api'; // ganti domain
+  static const String _baseUrl = 'https://rentals-circumstances-pollution-backing.trycloudflare.com/api'; // ganti domain
 
   // ── GET /api/notifikasi ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {

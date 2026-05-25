@@ -1,8 +1,8 @@
-// lib/guru/main_guru_scaffold.dart
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../dashboard/presentation/screens/dashboard_guru_screen.dart';
 import 'screen/profil_guru_screen.dart';
+import '../notifikasi/provider/notifikasi_guru_provider.dart';
 
 class MainGuruScaffold extends StatefulWidget {
   const MainGuruScaffold({super.key});
@@ -21,26 +21,28 @@ class _MainGuruScaffoldState extends State<MainGuruScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 80),
-              child: IndexedStack(index: _currentIndex, children: _screens),
+    return ChangeNotifierProvider(
+      create: (_) => NotifikasiGuruProvider()..loadNotifikasi(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 80),
+                child: IndexedStack(index: _currentIndex, children: _screens),
+              ),
             ),
-          ),
-          // Floating navbar — 2 item saja (Jadwal + Profil)
-          Positioned(
-            left: 40, right: 40, bottom: 16,
-            child: _GuruNavBar(
-              currentIndex: _currentIndex,
-              onTap: (i) => setState(() => _currentIndex = i),
+            Positioned(
+              left: 40, right: 40, bottom: 16,
+              child: _GuruNavBar(
+                currentIndex: _currentIndex,
+                onTap: (i) => setState(() => _currentIndex = i),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

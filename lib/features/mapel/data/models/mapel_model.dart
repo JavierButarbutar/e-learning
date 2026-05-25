@@ -160,10 +160,12 @@ class MateriItem {
   // Kuis
   final int? jumlahSoal;
   final int? durasiMenit;
-  final TipeKuisMateri tipeKuis; // ← field baru
+  final TipeKuisMateri tipeKuis;
 
-  // Tugas
+  // Tugas ← TAMBAH 2 field ini
   final String? deadlineTugas;
+  final String? judulTugas;      // ← judul khusus tugas dari API
+  final String? deskripsiTugas;  // ← deskripsi khusus tugas dari API
 
   const MateriItem({
     required this.id,
@@ -178,43 +180,44 @@ class MateriItem {
     this.ukuranFile,
     this.jumlahSoal,
     this.durasiMenit,
-    this.tipeKuis = TipeKuisMateri.harianKuis, // default kuis harian
+    this.tipeKuis = TipeKuisMateri.harianKuis,
     this.deadlineTugas,
     this.idTugas,
+    this.judulTugas,      // ← tambah
+    this.deskripsiTugas,  // ← tambah
   });
 
   factory MateriItem.fromJson(Map<String, dynamic> json) {
     final tugasJson = json['tugas'];
-    final hasTugas = tugasJson != null;
-
-    // TODO: sesuaikan key 'tipe_kuis' dengan response API kuis nanti
+    final hasTugas  = tugasJson != null;
     final tipeKuisStr = json['tipe_kuis'] as String?;
 
     return MateriItem(
-      id: json['id_materi'].toString(),
-      nomor: json['minggu_ke']?.toString() ?? '01',
-      judul: json['judul_materi'] ?? '-',
-      tanggal: json['tanggal_upload'],
-      konten: json['deskripsi'],
-      namaFile: json['file_name'],
-      tipeFile: json['file_type'],
-      ukuranFile: json['file_size']?.toString(),
-      fileUrl: json['file_url'],
-      idTugas: tugasJson?['id_tugas']?.toString(),
-      type: hasTugas ? MateriType.tugas : _parseType(json['type']),
+      id:            json['id_materi'].toString(),
+      nomor:         json['minggu_ke']?.toString() ?? '01',
+      judul:         json['judul_materi'] ?? '-',
+      tanggal:       json['tanggal_upload'],
+      konten:        json['deskripsi'],
+      namaFile:      json['file_name'],
+      tipeFile:      json['file_type'],
+      ukuranFile:    json['file_size']?.toString(),
+      fileUrl:       json['file_url'],
+      idTugas:       tugasJson?['id_tugas']?.toString(),
+      type:          hasTugas ? MateriType.tugas : _parseType(json['type']),
       deadlineTugas: tugasJson?['tanggal_deadline'],
-      tipeKuis: TipeKuisMateriX.fromString(tipeKuisStr),
+      tipeKuis:      TipeKuisMateriX.fromString(tipeKuisStr),
+
+      // ← parse judul & deskripsi tugas dari tugasJson
+      judulTugas:     tugasJson?['judul_tugas'],
+      deskripsiTugas: tugasJson?['deskripsi'],
     );
   }
 
   static MateriType _parseType(String? type) {
     switch (type) {
-      case 'tugas':
-        return MateriType.tugas;
-      case 'kuis':
-        return MateriType.kuis;
-      default:
-        return MateriType.materi;
+      case 'tugas': return MateriType.tugas;
+      case 'kuis':  return MateriType.kuis;
+      default:      return MateriType.materi;
     }
   }
 }
