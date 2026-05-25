@@ -7,37 +7,39 @@ class ApiService {
 
   // ================= LOGIN =================
   static Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
-    // role dihapus — backend menentukan role dari database
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiEndpoint.login),
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
-      );
+  required String email,
+  required String password,
+  String? fcmToken, // tambah
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse(ApiEndpoint.login),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+        if (fcmToken != null) "fcm_token": fcmToken, // tambah
+      }),
+    );
 
-      final data = _safeDecode(response.body);
+    final data = _safeDecode(response.body);
 
-      return {
-        "success": data['success'] ?? false,
-        "message": data['message'] ?? '',
-        "data": data['data'],
-      };
-    } catch (e) {
-      return {
-        "success": false,
-        "message": "Tidak dapat terhubung ke server",
-      };
-    }
+    return {
+      "success": data['success'] ?? false,
+      "message": data['message'] ?? '',
+      "data": data['data'],
+      "statusCode": response.statusCode, // tambah
+    };
+  } catch (e) {
+    return {
+      "success": false,
+      "message": "Tidak dapat terhubung ke server",
+    };
   }
+}
 
   // ================= GET STUDENT PROFILE =================
   static Future<Map<String, dynamic>> getStudentProfile({

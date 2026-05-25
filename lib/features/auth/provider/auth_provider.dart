@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/services/auth_service.dart';
 import '../data/repositories/auth_repository.dart';
 import '../../../features/notifikasi/data/services/notifikasi_service.dart';
+import '../../../features/guru/notifikasi/data/services/notifikasi_service.dart';
 
 /// Mengelola state dan orkestrasi proses autentikasi.
 /// Screen hanya listen ke provider ini — tidak ada logika bisnis di screen.
@@ -54,7 +55,10 @@ class AuthProvider extends ChangeNotifier {
         remember: remember,
       );
 
-      await NotifikasiService.init(); // Inisialisasi notifikasi setelah login
+      await NotifikasiService.init();
+      if (result.role == 'guru') {
+        await NotificationService.initialize();
+      }
       
       return result.role;
     } catch (e) {

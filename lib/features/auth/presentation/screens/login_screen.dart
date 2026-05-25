@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../../core/widgets/auth_scaffold.dart';
 import '../../../../core/widgets/app_textfield.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../provider/auth_provider.dart';
+import '../../../../core/helpers/force_logout_helper.dart';
+import '../../../notifikasi/data/repositories/notifikasi_repository.dart';
+import '../../../guru/notifikasi/data/repositories/notifikasi_guru_repository.dart';
 
 /// Screen login — hanya bertanggung jawab untuk:
 /// 1. Render UI (form, textfield, button)
@@ -29,6 +33,22 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _loadSavedCredentials();
+    _checkForceLogout(); // tambah
+  }
+
+  void _checkForceLogout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      if (args?['forceLogout'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sesi berakhir, akun digunakan di perangkat lain'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    });
   }
 
   /// Minta provider load kredensial tersimpan,
@@ -78,6 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      if (role == 'guru') {
+        await NotifikasiGuruRepository.updateFcmToken(fcmToken);
+      } else {
+        await NotifikasiRepository.updateFcmToken(fcmToken);
+      }
+    }
     // Navigasi berdasarkan role dari server
     Navigator.pushReplacementNamed(
       context,

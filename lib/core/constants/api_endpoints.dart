@@ -1,6 +1,6 @@
 class ApiEndpoint {
   static const String baseUrl =
-      "https://rentals-circumstances-pollution-backing.trycloudflare.com/api";
+      "https://loan-eco-chen-speech.trycloudflare.com/api";
 
   static const login = "$baseUrl/auth/login";
   static const checkEmail = "$baseUrl/auth/check-email";
@@ -13,7 +13,7 @@ class ApiEndpoint {
   static const String updatePassword = "$baseUrl/update-password";
   static const String updateEmail = "$baseUrl/update-email";
   static const String mapel = "$baseUrl/mapel";
-static const String jadwalGuruSemua = "$baseUrl/guru/jadwal/semua";
+  static const String jadwalGuruSemua = "$baseUrl/guru/jadwal/semua";
 
   static String detailMapel(dynamic id) =>
       "$baseUrl/mapel/$id";

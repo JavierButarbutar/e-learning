@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:async';                        // untuk TimeoutException
+import 'package:flutter/foundation.dart';   // untuk debugPrint
 import 'package:http/http.dart' as http;
 import '../models/notifikasi_model.dart';
 import '../../../../core/storage/shared_pref.dart'; // sesuaikan path SharedPref-mu
 
 class NotifikasiRepository {
-  static const String _baseUrl = 'https://rentals-circumstances-pollution-backing.trycloudflare.com/api'; // ganti domain
+  static const String _baseUrl = 'https://loan-eco-chen-speech.trycloudflare.com/api'; // ganti domain
 
   // ── GET /api/notifikasi ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {
@@ -87,18 +89,33 @@ class NotifikasiRepository {
   // ── POST /api/notifikasi/update-token ────────────────────────────────────
   static Future<void> updateFcmToken(String fcmToken) async {
   final token = await SharedPref.getToken();
-  
-  // Kalau belum login (token null), skip
-  if (token == null) return;
+  if (token == null) {
+    debugPrint("FCM UPDATE SKIP: auth token null");
+    return;
+  }
 
-  await http.post(
-    Uri.parse('$_baseUrl/notifikasi/update-token'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({'fcm_token': fcmToken}),
-  ).timeout(const Duration(seconds: 8)); // tidak hang terlalu lama
+  debugPrint("KIRIM FCM TOKEN: $fcmToken");
+
+  try {
+    final response = await http.post(  // ← tambah 'final response ='
+      Uri.parse('$_baseUrl/notifikasi/update-token'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'fcm_token': fcmToken}),
+    ).timeout(const Duration(seconds: 8));
+
+    debugPrint("RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}");
+
+    if (response.statusCode != 200) {
+      debugPrint("FCM token update failed: ${response.statusCode}");
+    }
+  } on TimeoutException {
+    debugPrint("FCM token update timeout");
+  } catch (e) {
+    debugPrint("FCM token update error: $e");
+  }
 }
 }
