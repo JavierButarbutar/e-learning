@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../../core/network/api_service.dart';
 import '../models/auth_result.dart';
 import '../models/user_model.dart';
@@ -10,13 +11,16 @@ class AuthService {
   /// Mengirim email + password ke API.
   /// Role ditentukan dari response server, bukan dari input user.
   static Future<AuthResult> login({
-    required String email,
-    required String password,
-  }) async {
-    final raw = await ApiService.login(
-      email: email,
-      password: password,
-    );
+  required String email,
+  required String password,
+}) async {
+  final fcmToken = await FirebaseMessaging.instance.getToken(); // tambah
+
+  final raw = await ApiService.login(
+    email: email,
+    password: password,
+    fcmToken: fcmToken, // tambah
+  );
  
     if (raw['success'] == false) {
       return AuthResult.failure(raw['message'] ?? 'Login gagal');

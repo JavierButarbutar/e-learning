@@ -1,21 +1,18 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';   // untuk debugPrint
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../repositories/notifikasi_repository.dart';
 
-// Handler background (harus top-level function)
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Background message diterima otomatis oleh sistem, tidak perlu show manual
-}
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 class NotifikasiService {
   static final FlutterLocalNotificationsPlugin _localNotif =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // ── Setup local notifications ──────────────────────────────────────────
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    // ── Setup local notifications ────────────────────────────────────────
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -23,25 +20,20 @@ class NotifikasiService {
     );
 
     await _localNotif.initialize(
-      const InitializationSettings(
-          android: androidSettings, iOS: iosSettings),
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
     );
 
     // Buat channel Android
     await _localNotif
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(
           const AndroidNotificationChannel(
-            'elearning_channel',       // harus sama dengan channel_id di FcmService
+            'elearning_channel',
             'E-Learning Notifikasi',
             description: 'Notifikasi tugas, materi, presensi, dan kuis',
             importance: Importance.high,
           ),
         );
-
-    // ── Firebase Messaging ─────────────────────────────────────────────────
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Minta izin (iOS & Android 13+)
     await FirebaseMessaging.instance.requestPermission(
@@ -50,8 +42,18 @@ class NotifikasiService {
       sound: true,
     );
 
-    // Kirim FCM token ke backend setelah login
-    await _registerToken();
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    debugPrint("FCM TOKEN: $fcmToken");
+    if (fcmToken != null) {
+      await NotifikasiRepository.updateFcmToken(fcmToken); // ← ini yang kurang
+    }
+
+    // Handle kalau Firebase rotate token (token refresh otomatis)
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      NotifikasiRepository.updateFcmToken(newToken).catchError((e) {
+        print("FCM token refresh failed: $e");
+      });
+    });
 
     // Foreground message → tampilkan via local notification
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -66,17 +68,12 @@ class NotifikasiService {
           android: AndroidNotificationDetails(
             'elearning_channel',
             'E-Learning Notifikasi',
-
             importance: Importance.max,
             priority: Priority.high,
-
             playSound: true,
             enableVibration: true,
-
             visibility: NotificationVisibility.public,
-
             autoCancel: true,
-
             icon: '@mipmap/ic_launcher',
           ),
           iOS: const DarwinNotificationDetails(),
@@ -84,25 +81,4 @@ class NotifikasiService {
       );
     });
   }
-
-  // Daftarkan token FCM ke backend
-  static Future<void> _registerToken() async {
-  try {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    print("FCM TOKEN: $fcmToken");
-    if (fcmToken != null) {
-      await NotifikasiRepository.updateFcmToken(fcmToken);
-    }
-  } catch (e) {
-    // Server mati / network error → skip saja, tidak block app
-    print("FCM token registration skipped: $e");
-  }
-
-  // Refresh token tetap jalan meskipun registrasi awal gagal
-  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-    NotifikasiRepository.updateFcmToken(newToken).catchError((e) {
-      print("FCM token refresh failed: $e");
-    });
-  });
-}
 }

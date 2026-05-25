@@ -1,3 +1,5 @@
+import 'dart:async';                        // untuk TimeoutException
+import 'package:flutter/foundation.dart';   // untuk debugPrint
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/notifikasi_guru_model.dart';
@@ -5,7 +7,7 @@ import '../../../../../core/storage/shared_pref.dart';
 
 class NotifikasiGuruRepository {
   static const String _baseUrl =
-      'https://rentals-circumstances-pollution-backing.trycloudflare.com/api';
+      'https://loan-eco-chen-speech.trycloudflare.com/api';
 
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {
     try {
@@ -65,4 +67,35 @@ class NotifikasiGuruRepository {
       },
     );
   }
+
+  static Future<void> updateFcmToken(String fcmToken) async {
+  final token = await SharedPref.getToken();
+  if (token == null) return;
+
+  debugPrint("KIRIM FCM TOKEN: $fcmToken"); 
+
+  try {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/notifikasi/update-token'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'fcm_token': fcmToken}),
+    ).timeout(const Duration(seconds: 8));
+
+     debugPrint("RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}");
+
+    // Optional: log kalau gagal tapi jangan rethrow
+    // FCM token update bukan operasi kritis — gagal pun app tetap jalan
+    if (response.statusCode != 200) {
+      debugPrint("FCM token update failed: ${response.statusCode}");
+    }
+  } on TimeoutException {
+    debugPrint("FCM token update timeout");
+  } catch (e) {
+    debugPrint("FCM token update error: $e");
+  }
+}
 }
