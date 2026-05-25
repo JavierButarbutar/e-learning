@@ -43,4 +43,24 @@ class MapelProvider extends ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
-}
+
+  // Di mapel_provider.dart
+
+  final Map<String, List<MateriItem>> _materiCache = {};
+  Map<String, List<MateriItem>> get materiCache => _materiCache;
+
+  Future<void> fetchAllMateri() async {
+    if (_mapel.isEmpty) await getMapel(); // pastikan mapel sudah di-load
+
+    final futures = _mapel.map((m) async {
+      if (_materiCache.containsKey(m.id)) return; // skip kalau sudah di-cache
+      try {
+        final result = await _repo.getMateri(m.id);
+        _materiCache[m.id] = result;
+      } catch (_) {}
+    });
+
+    await Future.wait(futures);
+    notifyListeners();
+  }
+  }

@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../notifikasi/provider/notifikasi_provider.dart';
 import '../../../mapel/provider/mapel_provider.dart';
 import '../../../notifikasi/presentation/screens/notifikasi_screen.dart';
@@ -10,6 +12,7 @@ import '../../../mapel/data/models/progress_materi.dart';
 import '../../../mapel/presentation/screens/detail_materi_screen.dart';
 import '../../../../core/storage/shared_pref.dart';
 import '../../../presensi/provider/presensi_provider.dart';
+import '../../../kuis/presentation/screens/kuis_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,17 +21,31 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+class _MateriWithMapel {
+  final MateriItem materi;
+  final MapelModel mapel;
+
+  const _MateriWithMapel({
+    required this.materi,
+    required this.mapel,
+  });
+}
+
 class _DashboardScreenState extends State<DashboardScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController =
+      TextEditingController();
 
   List<MapelModel> _filteredMapel = [];
-  List<MateriItem> _filteredMateri = [];
+  List<_MateriWithMapel> _filteredMateri = [];
 
   bool _isSearching = false;
+  bool _isLoadingSearch = false;
 
   String _name = 'User';
   String _initials = 'U';
   String _foto = '';
+
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -42,42 +59,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _searchTopic(String keyword) async {
     final provider = context.read<MapelProvider>();
 
     keyword = keyword.toLowerCase().trim();
 
     if (keyword.isEmpty) {
+      if (!mounted) return;
+
       setState(() {
         _isSearching = false;
+        _isLoadingSearch = false;
         _filteredMapel = [];
         _filteredMateri = [];
       });
+
       return;
     }
+
+    setState(() {
+      _isSearching = true;
+      _isLoadingSearch = true;
+    });
+
+    if (provider.mapel.isEmpty) {
+      await provider.getMapel();
+    }
+
+    await provider.fetchAllMateri();
 
     final mapelResult = provider.mapel.where((m) {
       return m.nama.toLowerCase().contains(keyword) ||
           m.deskripsi.toLowerCase().contains(keyword);
     }).toList();
 
-    List<MateriItem> materiResult = [];
+    List<_MateriWithMapel> materiResult = [];
 
     for (final mapel in provider.mapel) {
-      await provider.getMateri(mapel.id);
+      final cached = provider.materiCache[mapel.id] ?? [];
 
-      final result = provider.materi.where((materi) {
-        return materi.judul.toLowerCase().contains(keyword) ||
-            (materi.konten ?? '').toLowerCase().contains(keyword);
-      }).toList();
+      final matched = cached.where((materi) {
+        return materi.judul
+                .toLowerCase()
+                .contains(keyword) ||
+            (materi.konten ?? '')
+                .toLowerCase()
+                .contains(keyword) ||
+            materi.nomor
+                .toLowerCase()
+                .contains(keyword);
+      });
 
-      materiResult.addAll(result);
+      materiResult.addAll(
+        matched.map(
+          (m) => _MateriWithMapel(
+            materi: m,
+            mapel: mapel,
+          ),
+        ),
+      );
     }
 
     if (!mounted) return;
 
     setState(() {
-      _isSearching = true;
+      _isLoadingSearch = false;
       _filteredMapel = mapelResult;
       _filteredMateri = materiResult;
     });
@@ -98,14 +151,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _getInitials(String name) {
-    final parts =
-        name.trim().split(' ').where((p) => p.isNotEmpty).toList();
+    final parts = name
+        .trim()
+        .split(' ')
+        .where((p) => p.isNotEmpty)
+        .toList();
 
     if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      return '${parts[0][0]}${parts[1][0]}'
+          .toUpperCase();
     }
 
-    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    return name.isNotEmpty
+        ? name[0].toUpperCase()
+        : 'U';
   }
 
   @override
@@ -121,39 +180,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                  16, 20, 16, 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
 
                   // SEARCH BAR
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
+                        const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(18),
+                      color:
+                          const Color(0xFFE8F5E9),
+                      borderRadius:
+                          BorderRadius.circular(18),
                       border: Border.all(
-                        color: const Color(0xFFB7DDB9),
+                        color:
+                            const Color(0xFFB7DDB9),
                       ),
                     ),
                     child: TextField(
-                      controller: _searchController,
-                      onChanged: _searchTopic,
+                      controller:
+                          _searchController,
+                      onChanged: (val) {
+                        _debounce?.cancel();
+
+                        if (val.trim().isEmpty) {
+                          setState(() {
+                            _isSearching =
+                                false;
+                            _isLoadingSearch =
+                                false;
+                            _filteredMapel =
+                                [];
+                            _filteredMateri =
+                                [];
+                          });
+
+                          return;
+                        }
+
+                        _debounce = Timer(
+                          const Duration(
+                              milliseconds: 400),
+                          () {
+                            _searchTopic(val);
+                          },
+                        );
+                      },
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        color: Color(0xFF1B5E20),
+                        color:
+                            Color(0xFF1B5E20),
                       ),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
+                      decoration:
+                          const InputDecoration(
+                        border:
+                            InputBorder.none,
                         icon: Icon(
                           Icons.search_rounded,
-                          color: Color(0xFF2E7D32),
+                          color: Color(
+                              0xFF2E7D32),
                         ),
-                        hintText: 'Cari mapel atau materi...',
+                        hintText:
+                            'Cari mapel atau materi...',
                         hintStyle: TextStyle(
-                          color: Color(0xFF7AA87D),
-                          fontFamily: 'Poppins',
+                          color:
+                              Color(0xFF7AA87D),
+                          fontFamily:
+                              'Poppins',
                         ),
                       ),
                     ),
@@ -163,165 +262,352 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // HASIL SEARCH
                   if (_isSearching) ...[
-
-                    if (_filteredMapel.isNotEmpty) ...[
-                      const Text(
-                        'Hasil Mata Pelajaran',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1A1A1A),
-                          fontFamily: 'Poppins',
+                    if (_isLoadingSearch)
+                      const Padding(
+                        padding:
+                            EdgeInsets.symmetric(
+                                vertical: 30),
+                        child: Center(
+                          child:
+                              CircularProgressIndicator(
+                            color: Color(
+                                0xFF2E7D32),
+                          ),
                         ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      ..._filteredMapel.map(
-                        (m) => _MapelCard(
-                          mapel: m,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  MateriScreen(mapel: m),
+                      )
+                    else ...[
+                      if (_filteredMapel
+                              .isEmpty &&
+                          _filteredMateri
+                              .isEmpty)
+                        const Padding(
+                          padding:
+                              EdgeInsets.symmetric(
+                                  vertical: 30),
+                          child: Center(
+                            child: Text(
+                              'Tidak ada hasil ditemukan',
+                              style: TextStyle(
+                                color: Color(
+                                    0xFF888888),
+                                fontFamily:
+                                    'Poppins',
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
 
-                    if (_filteredMateri.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-
-                      const Text(
-                        'Hasil Materi',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1A1A1A),
-                          fontFamily: 'Poppins',
+                      // MAPEL
+                      if (_filteredMapel
+                          .isNotEmpty) ...[
+                        const Text(
+                          'Hasil Mata Pelajaran',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight:
+                                FontWeight.w700,
+                            color: Color(
+                                0xFF1A1A1A),
+                            fontFamily:
+                                'Poppins',
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 12),
+                        const SizedBox(
+                            height: 12),
 
-                      ..._filteredMateri.map(
-                        (materi) => Container(
-                          margin:
-                              const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.circular(14),
-                            border: Border.all(
-                              color: const Color(0xFFEAEAEA),
+                        ..._filteredMapel.map(
+                          (m) => _MapelCard(
+                            mapel: m,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      MateriScreen(
+                                    mapel: m,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+
+                      // MATERI
+                      if (_filteredMateri
+                          .isNotEmpty) ...[
+                        const SizedBox(
+                            height: 16),
+
+                        const Text(
+                          'Hasil Materi',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight:
+                                FontWeight.w700,
+                            color: Color(
+                                0xFF1A1A1A),
+                            fontFamily:
+                                'Poppins',
+                          ),
+                        ),
+
+                        const SizedBox(
+                            height: 12),
+
+                        ..._filteredMateri.map(
+                          (entry) =>
+                              GestureDetector(
+                            onTap: () {
+                              if (entry.materi
+                                      .type ==
+                                  MateriType
+                                      .kuis) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        KuisScreen(
+                                      kuisId:
+                                          int.parse(
+                                        entry
+                                            .materi
+                                            .id,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        DetailMateriScreen(
+                                      item: entry
+                                          .materi,
+                                      namaMapel:
+                                          entry
+                                              .mapel
+                                              .nama,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Container(
+                              margin:
+                                  const EdgeInsets
+                                      .only(
+                                bottom: 10,
+                              ),
+                              padding:
+                                  const EdgeInsets
+                                      .all(14),
+                              decoration:
+                                  BoxDecoration(
+                                color:
+                                    Colors.white,
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                            14),
+                                border: Border.all(
+                                  color: const Color(
+                                      0xFFEAEAEA),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment
+                                              .start,
+                                      children: [
+                                        Text(
+                                          entry
+                                              .materi
+                                              .judul,
+                                          style:
+                                              const TextStyle(
+                                            fontWeight:
+                                                FontWeight
+                                                    .w700,
+                                            fontFamily:
+                                                'Poppins',
+                                          ),
+                                        ),
+
+                                        const SizedBox(
+                                            height:
+                                                2),
+
+                                        Text(
+                                          entry
+                                              .mapel
+                                              .nama,
+                                          style:
+                                              const TextStyle(
+                                            fontSize:
+                                                11,
+                                            color: Color(
+                                                0xFF2E7D32),
+                                            fontFamily:
+                                                'Poppins',
+                                            fontWeight:
+                                                FontWeight
+                                                    .w600,
+                                          ),
+                                        ),
+
+                                        if (entry
+                                                .materi
+                                                .konten !=
+                                            null) ...[
+                                          const SizedBox(
+                                              height:
+                                                  2),
+
+                                          Text(
+                                            entry
+                                                .materi
+                                                .konten!,
+                                            maxLines:
+                                                1,
+                                            overflow:
+                                                TextOverflow
+                                                    .ellipsis,
+                                            style:
+                                                const TextStyle(
+                                              fontSize:
+                                                  12,
+                                              color:
+                                                  Color(
+                                                      0xFF777777),
+                                              fontFamily:
+                                                  'Poppins',
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+
+                                  const Icon(
+                                    Icons
+                                        .chevron_right_rounded,
+                                    color: Color(
+                                        0xFFCCCCCC),
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                materi.judul,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                materi.konten ?? '-',
-                                maxLines: 2,
-                                overflow:
-                                    TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF777777),
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
+                    ],
                   ],
 
                   // AKTIVITAS
                   if (!_isSearching &&
                       ProgressStore.aktivitas
-                          .where((e) => !e.isCompleted)
+                          .where(
+                              (e) =>
+                                  !e.isCompleted)
                           .isNotEmpty) ...[
                     const Text(
                       'Aktivitas terbaru',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
-                        fontFamily: 'Poppins',
+                        fontWeight:
+                            FontWeight.w700,
+                        color:
+                            Color(0xFF1A1A1A),
+                        fontFamily:
+                            'Poppins',
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
                     ...ProgressStore.aktivitas
-                        .where((e) => !e.isCompleted)
+                        .where(
+                          (e) =>
+                              !e.isCompleted,
+                        )
                         .map(
-                          (a) => _AktivitasCard(
+                          (a) =>
+                              _AktivitasCard(
                             mapel: a.mapel,
-                            materi: a.materi,
-                            onLanjut: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    DetailMateriScreen(
-                                  item: a.item,
-                                  namaMapel: a.mapel,
+                            materi:
+                                a.materi,
+                            onLanjut: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      DetailMateriScreen(
+                                    item: a.item,
+                                    namaMapel:
+                                        a.mapel,
+                                  ),
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         ),
                   ],
 
+                  // MAPEL UTAMA
                   if (!_isSearching) ...[
                     const SizedBox(height: 20),
 
                     Row(
                       mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                          MainAxisAlignment
+                              .spaceBetween,
                       children: [
                         const Text(
                           'Mata Pelajaran',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
-                            fontFamily: 'Poppins',
+                            fontWeight:
+                                FontWeight.w700,
+                            color: Color(
+                                0xFF1A1A1A),
+                            fontFamily:
+                                'Poppins',
                           ),
                         ),
 
                         GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const MapelScreen(
-                                standalone: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MapelScreen(
+                                  standalone:
+                                      true,
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                           child: const Text(
                             'LIHAT SEMUA ›',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF2E7D32),
-                              fontFamily: 'Poppins',
+                              fontWeight:
+                                  FontWeight
+                                      .w700,
+                              color: Color(
+                                  0xFF2E7D32),
+                              fontFamily:
+                                  'Poppins',
                             ),
                           ),
                         ),
@@ -333,18 +619,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (provider.isLoading)
                       const Center(
                         child: Padding(
-                          padding: EdgeInsets.all(20),
+                          padding:
+                              EdgeInsets.all(
+                                  20),
                           child:
                               CircularProgressIndicator(),
                         ),
                       )
-                    else if (provider.error != null)
+                    else if (provider.error !=
+                        null)
                       Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding:
+                            const EdgeInsets
+                                .all(20),
                         child: Text(
                           provider.error!,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
+                          style:
+                              const TextStyle(
+                            fontFamily:
+                                'Poppins',
                           ),
                         ),
                       )
@@ -352,13 +645,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ...mapelList.take(3).map(
                         (m) => _MapelCard(
                           mapel: m,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  MateriScreen(mapel: m),
-                            ),
-                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    MateriScreen(
+                                  mapel: m,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                   ],
@@ -376,7 +673,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: const Color(0xFF2E7D32),
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.of(context).padding.top + 16,
+        MediaQuery.of(context)
+                .padding
+                .top +
+            16,
         20,
         20,
       ),
@@ -391,9 +691,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'Halo! $_name',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                        FontWeight.w800,
                     color: Colors.white,
-                    fontFamily: 'Poppins',
+                    fontFamily:
+                        'Poppins',
                   ),
                 ),
 
@@ -403,8 +705,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'Selamat Datang di Aplikasi',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xB3FFFFFF),
-                    fontFamily: 'Poppins',
+                    color:
+                        Color(0xB3FFFFFF),
+                    fontFamily:
+                        'Poppins',
                   ),
                 ),
               ],
@@ -412,72 +716,107 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
 
           GestureDetector(
-  onTap: () async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const NotifikasiScreen(),
-      ),
-    );
-    // Refresh unread count setelah balik
-    if (context.mounted) {
-      context.read<NotifikasiProvider>().loadNotifikasi(refresh: true);
-    }
-  },
-  child: Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.2),
-        ),
-        child: const Icon(
-          Icons.notifications_outlined,
-          color: Colors.white,
-          size: 22,
-        ),
-      ),
-
-      // Badge unread count
-      Consumer<NotifikasiProvider>(
-        builder: (context, prov, _) {
-          if (prov.unreadCount == 0) return const SizedBox.shrink();
-          return Positioned(
-            top: -4,
-            right: -4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 4, vertical: 1),
-              constraints: const BoxConstraints(
-                  minWidth: 16, minHeight: 16),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: const Color(0xFF2E7D32), width: 1.5),
-              ),
-              child: Text(
-                prov.unreadCount > 99
-                    ? '99+'
-                    : '${prov.unreadCount}',
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const NotifikasiScreen(),
                 ),
-                textAlign: TextAlign.center,
-              ),
+              );
+
+              if (context.mounted) {
+                context
+                    .read<
+                        NotifikasiProvider>()
+                    .loadNotifikasi(
+                        refresh: true);
+              }
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration:
+                      BoxDecoration(
+                    shape:
+                        BoxShape.circle,
+                    color: Colors.white
+                        .withOpacity(0.2),
+                  ),
+                  child: const Icon(
+                    Icons
+                        .notifications_outlined,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+
+                Consumer<
+                    NotifikasiProvider>(
+                  builder:
+                      (context, prov, _) {
+                    if (prov.unreadCount ==
+                        0) {
+                      return const SizedBox
+                          .shrink();
+                    }
+
+                    return Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding:
+                            const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        constraints:
+                            const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        decoration:
+                            BoxDecoration(
+                          color: Colors.red,
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                                      8),
+                          border: Border.all(
+                            color: const Color(
+                                0xFF2E7D32),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          prov.unreadCount >
+                                  99
+                              ? '99+'
+                              : '${prov.unreadCount}',
+                          style:
+                              const TextStyle(
+                            fontSize: 9,
+                            fontWeight:
+                                FontWeight
+                                    .w800,
+                            color:
+                                Colors.white,
+                            fontFamily:
+                                'Poppins',
+                          ),
+                          textAlign:
+                              TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          );
-        },
-      ),
-    ],
-  ),
-),
+          ),
 
           const SizedBox(width: 10),
 
@@ -488,7 +827,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(
-                color: const Color(0xFFF5A623),
+                color:
+                    const Color(0xFFF5A623),
                 width: 2.5,
               ),
             ),
@@ -498,30 +838,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _foto,
                       fit: BoxFit.cover,
                       errorBuilder:
-                          (_, __, ___) => Center(
-                        child: Text(
-                          _initials,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight:
-                                FontWeight.w800,
-                            color:
-                                Color(0xFF2E7D32),
-                            fontFamily: 'Poppins',
+                          (_, __, ___) {
+                        return Center(
+                          child: Text(
+                            _initials,
+                            style:
+                                const TextStyle(
+                              fontSize: 14,
+                              fontWeight:
+                                  FontWeight
+                                      .w800,
+                              color: Color(
+                                  0xFF2E7D32),
+                              fontFamily:
+                                  'Poppins',
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     )
                   : Center(
                       child: Text(
                         _initials,
-                        style: const TextStyle(
+                        style:
+                            const TextStyle(
                           fontSize: 14,
                           fontWeight:
                               FontWeight.w800,
-                          color:
-                              Color(0xFF2E7D32),
-                          fontFamily: 'Poppins',
+                          color: Color(
+                              0xFF2E7D32),
+                          fontFamily:
+                              'Poppins',
                         ),
                       ),
                     ),
@@ -549,12 +896,17 @@ class _AktivitasCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin:
+          const EdgeInsets.only(bottom: 10),
       padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFFEEEEEE),
         ),
@@ -570,9 +922,12 @@ class _AktivitasCard extends StatelessWidget {
                   mapel,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                    fontFamily: 'Poppins',
+                    fontWeight:
+                        FontWeight.w700,
+                    color:
+                        Color(0xFF1A1A1A),
+                    fontFamily:
+                        'Poppins',
                   ),
                 ),
 
@@ -582,8 +937,10 @@ class _AktivitasCard extends StatelessWidget {
                   materi,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF888888),
-                    fontFamily: 'Poppins',
+                    color:
+                        Color(0xFF888888),
+                    fontFamily:
+                        'Poppins',
                   ),
                 ),
               ],
@@ -595,22 +952,27 @@ class _AktivitasCard extends StatelessWidget {
           GestureDetector(
             onTap: onLanjut,
             child: Container(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 10,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5A623),
+                color:
+                    const Color(0xFFF5A623),
                 borderRadius:
-                    BorderRadius.circular(10),
+                    BorderRadius.circular(
+                        10),
               ),
               child: const Text(
                 'Lanjutkan',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight:
+                      FontWeight.w700,
                   color: Colors.white,
-                  fontFamily: 'Poppins',
+                  fontFamily:
+                      'Poppins',
                 ),
               ),
             ),
@@ -635,14 +997,20 @@ class _MapelCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin:
+            const EdgeInsets.only(bottom: 10),
         padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius:
+              BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFEEEEEE),
+            color:
+                const Color(0xFFEEEEEE),
           ),
         ),
         child: Row(
@@ -653,7 +1021,8 @@ class _MapelCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: mapel.iconBg,
                 borderRadius:
-                    BorderRadius.circular(12),
+                    BorderRadius.circular(
+                        12),
               ),
               child: Icon(
                 mapel.icon,
@@ -673,9 +1042,12 @@ class _MapelCard extends StatelessWidget {
                     mapel.nama,
                     style: const TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A1A),
-                      fontFamily: 'Poppins',
+                      fontWeight:
+                          FontWeight.w700,
+                      color:
+                          Color(0xFF1A1A1A),
+                      fontFamily:
+                          'Poppins',
                     ),
                   ),
 
@@ -685,8 +1057,10 @@ class _MapelCard extends StatelessWidget {
                     '${mapel.jumlahMateri} Materi · ${mapel.jumlahProyek} Proyek',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF888888),
-                      fontFamily: 'Poppins',
+                      color:
+                          Color(0xFF888888),
+                      fontFamily:
+                          'Poppins',
                     ),
                   ),
                 ],
