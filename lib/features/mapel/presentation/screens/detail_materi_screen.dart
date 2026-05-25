@@ -591,8 +591,8 @@ class _TugasCard extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => UploadTugasScreen(
                           idTugas:        item.idTugas ?? '',
-                          judulTugas:     item.judul,
-                          deskripsiTugas: item.konten ?? '-',
+                          judulTugas:     item.judulTugas ?? item.judul,      // ← pakai judulTugas, fallback ke judul materi
+                          deskripsiTugas: item.deskripsiTugas ?? item.konten ?? '-', // ← pakai deskripsiTugas
                           deadline:       item.deadlineTugas ?? '-',
                           namaMapel:      namaMapel,
                         ),

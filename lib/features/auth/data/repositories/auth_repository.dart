@@ -1,4 +1,6 @@
 import '../../../../core/storage/shared_pref.dart';
+import '../models/user_model.dart';
+import '../models/saved_credentials.dart';
 
 /// Bertanggung jawab untuk semua operasi penyimpanan lokal (SharedPreferences).
 /// Screen dan Provider tidak boleh langsung akses SharedPref.
@@ -7,13 +9,13 @@ class AuthRepository {
   static Future<void> saveSession({
     required String token,
     required String role,
-    required Map<String, dynamic> user,
+    required UserModel user,
     required bool remember,
   }) async {
     await SharedPref.saveToken(token);
-    await SharedPref.saveUser(user);
+    await SharedPref.saveUser(user.toMap());
     await SharedPref.saveLogin(
-      email: user['email'] ?? '',
+      email: user.email,
       role: role,
       remember: remember,
     );

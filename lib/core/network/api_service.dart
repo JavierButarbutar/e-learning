@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_endpoints.dart';
+import '../../../features/guru/dashboard/data/models/jadwal_model.dart';
 
 class ApiService {
 
@@ -303,6 +304,95 @@ class ApiService {
       return _errorResponse("Tidak dapat terhubung ke server");
     }
   }
+
+ // ================= GET JADWAL GURU =================
+
+static Future<Map<String, List<JadwalItem>>> getJadwalGuru({
+  required String token,
+}) async {
+  try {
+    final response = await http.get(
+      Uri.parse(ApiEndpoint.jadwalGuruSemua),
+      headers: {
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    final data = _safeDecode(response.body);
+
+    // DEBUG RESPONSE
+    print("STATUS CODE : ${response.statusCode}");
+    print("STATUS : ${response.statusCode}");
+    print("BODY : ${response.body}");
+    print("DATA : $data");
+
+    // Validasi response
+    if (response.statusCode != 200 ||
+        data == null ||
+        data['success'] != true) {
+      return {};
+    }
+
+    // Ambil jadwal minggu
+    final minggu =
+        data['data']?['jadwal_minggu'] as List? ?? [];
+
+    // Penampung hasil
+    Map<String, List<JadwalItem>> hasil = {};
+
+    for (final item in minggu) {
+      final hariLabel =
+          item['label']?.toString() ?? '';
+
+      final jadwalList =
+          item['jadwal'] as List? ?? [];
+
+      hasil[hariLabel] = jadwalList.map((e) {
+        return JadwalItem.fromJson({
+          ...e,
+          'hari_label': hariLabel,
+        });
+      }).toList();
+    }
+
+    return hasil;
+  } catch (e) {
+    print("ERROR GET JADWAL GURU : $e");
+    return {};
+  }
+}
+
+static Future<void> updateFcmToken({
+  required String token,
+  required String fcmToken,
+}) async {
+
+  try {
+
+    print(ApiEndpoint.updateFcmToken);
+
+    final response = await http.post(
+      Uri.parse(ApiEndpoint.updateFcmToken),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "fcm_token": fcmToken,
+      }),
+    );
+
+    print("STATUS : ${response.statusCode}");
+    print("BODY : ${response.body}");
+
+  } catch (e) {
+
+    print("ERROR UPDATE TOKEN : $e");
+
+  }
+}
 
   // ================= HELPER =================
   static Map<String, dynamic> _safeDecode(String body) {
