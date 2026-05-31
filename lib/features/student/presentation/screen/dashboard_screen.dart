@@ -25,15 +25,11 @@ class _MateriWithMapel {
   final MateriItem materi;
   final MapelModel mapel;
 
-  const _MateriWithMapel({
-    required this.materi,
-    required this.mapel,
-  });
+  const _MateriWithMapel({required this.materi, required this.mapel});
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   List<MapelModel> _filteredMapel = [];
   List<_MateriWithMapel> _filteredMateri = [];
@@ -106,24 +102,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final cached = provider.materiCache[mapel.id] ?? [];
 
       final matched = cached.where((materi) {
-        return materi.judul
-                .toLowerCase()
-                .contains(keyword) ||
-            (materi.konten ?? '')
-                .toLowerCase()
-                .contains(keyword) ||
-            materi.nomor
-                .toLowerCase()
-                .contains(keyword);
+        return materi.judul.toLowerCase().contains(keyword) ||
+            (materi.konten ?? '').toLowerCase().contains(keyword) ||
+            materi.nomor.toLowerCase().contains(keyword);
       });
 
       materiResult.addAll(
-        matched.map(
-          (m) => _MateriWithMapel(
-            materi: m,
-            mapel: mapel,
-          ),
-        ),
+        matched.map((m) => _MateriWithMapel(materi: m, mapel: mapel)),
       );
     }
 
@@ -151,20 +136,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   String _getInitials(String name) {
-    final parts = name
-        .trim()
-        .split(' ')
-        .where((p) => p.isNotEmpty)
-        .toList();
+    final parts = name.trim().split(' ').where((p) => p.isNotEmpty).toList();
 
     if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'
-          .toUpperCase();
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
 
-    return name.isNotEmpty
-        ? name[0].toUpperCase()
-        : 'U';
+    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
   }
 
   @override
@@ -180,53 +158,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                  16, 20, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // SEARCH BAR
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(
-                      horizontal: 16,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color:
-                          const Color(0xFFE8F5E9),
-                      borderRadius:
-                          BorderRadius.circular(18),
-                      border: Border.all(
-                        color:
-                            const Color(0xFFB7DDB9),
-                      ),
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFB7DDB9)),
                     ),
                     child: TextField(
-                      controller:
-                          _searchController,
+                      controller: _searchController,
                       onChanged: (val) {
                         _debounce?.cancel();
 
                         if (val.trim().isEmpty) {
                           setState(() {
-                            _isSearching =
-                                false;
-                            _isLoadingSearch =
-                                false;
-                            _filteredMapel =
-                                [];
-                            _filteredMateri =
-                                [];
+                            _isSearching = false;
+                            _isLoadingSearch = false;
+                            _filteredMapel = [];
+                            _filteredMateri = [];
                           });
 
                           return;
                         }
 
                         _debounce = Timer(
-                          const Duration(
-                              milliseconds: 400),
+                          const Duration(milliseconds: 400),
                           () {
                             _searchTopic(val);
                           },
@@ -234,25 +194,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       },
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        color:
-                            Color(0xFF1B5E20),
+                        color: Color(0xFF1B5E20),
                       ),
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            InputBorder.none,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
                         icon: Icon(
                           Icons.search_rounded,
-                          color: Color(
-                              0xFF2E7D32),
+                          color: Color(0xFF2E7D32),
                         ),
-                        hintText:
-                            'Cari mapel atau materi...',
+                        hintText: 'Cari mapel atau materi...',
                         hintStyle: TextStyle(
-                          color:
-                              Color(0xFF7AA87D),
-                          fontFamily:
-                              'Poppins',
+                          color: Color(0xFF7AA87D),
+                          fontFamily: 'Poppins',
                         ),
                       ),
                     ),
@@ -260,61 +213,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   const SizedBox(height: 20),
 
-                  // HASIL SEARCH
                   if (_isSearching) ...[
                     if (_isLoadingSearch)
                       const Padding(
-                        padding:
-                            EdgeInsets.symmetric(
-                                vertical: 30),
+                        padding: EdgeInsets.symmetric(vertical: 30),
                         child: Center(
-                          child:
-                              CircularProgressIndicator(
-                            color: Color(
-                                0xFF2E7D32),
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF2E7D32),
                           ),
                         ),
                       )
                     else ...[
-                      if (_filteredMapel
-                              .isEmpty &&
-                          _filteredMateri
-                              .isEmpty)
+                      if (_filteredMapel.isEmpty && _filteredMateri.isEmpty)
                         const Padding(
-                          padding:
-                              EdgeInsets.symmetric(
-                                  vertical: 30),
+                          padding: EdgeInsets.symmetric(vertical: 30),
                           child: Center(
                             child: Text(
                               'Tidak ada hasil ditemukan',
                               style: TextStyle(
-                                color: Color(
-                                    0xFF888888),
-                                fontFamily:
-                                    'Poppins',
+                                color: Color(0xFF888888),
+                                fontFamily: 'Poppins',
                               ),
                             ),
                           ),
                         ),
 
-                      // MAPEL
-                      if (_filteredMapel
-                          .isNotEmpty) ...[
+                      if (_filteredMapel.isNotEmpty) ...[
                         const Text(
                           'Hasil Mata Pelajaran',
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight:
-                                FontWeight.w700,
-                            color: Color(
-                                0xFF1A1A1A),
-                            fontFamily:
-                                'Poppins',
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                            fontFamily: 'Poppins',
                           ),
                         ),
 
-                        const SizedBox(
-                            height: 12),
+                        const SizedBox(height: 12),
 
                         ..._filteredMapel.map(
                           (m) => _MapelCard(
@@ -323,10 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      MateriScreen(
-                                    mapel: m,
-                                  ),
+                                  builder: (_) => MateriScreen(mapel: m),
                                 ),
                               );
                             },
@@ -334,47 +266,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ],
 
-                      // MATERI
-                      if (_filteredMateri
-                          .isNotEmpty) ...[
-                        const SizedBox(
-                            height: 16),
+                      if (_filteredMateri.isNotEmpty) ...[
+                        const SizedBox(height: 16),
 
                         const Text(
                           'Hasil Materi',
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight:
-                                FontWeight.w700,
-                            color: Color(
-                                0xFF1A1A1A),
-                            fontFamily:
-                                'Poppins',
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                            fontFamily: 'Poppins',
                           ),
                         ),
 
-                        const SizedBox(
-                            height: 12),
+                        const SizedBox(height: 12),
 
                         ..._filteredMateri.map(
-                          (entry) =>
-                              GestureDetector(
+                          (entry) => GestureDetector(
                             onTap: () {
-                              if (entry.materi
-                                      .type ==
-                                  MateriType
-                                      .kuis) {
+                              if (entry.materi.type == MateriType.kuis) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        KuisScreen(
-                                      kuisId:
-                                          int.parse(
-                                        entry
-                                            .materi
-                                            .id,
-                                      ),
+                                    builder: (_) => KuisScreen(
+                                      kuisId: int.parse(entry.materi.id),
                                     ),
                                   ),
                                 );
@@ -382,39 +297,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        DetailMateriScreen(
-                                      item: entry
-                                          .materi,
-                                      namaMapel:
-                                          entry
-                                              .mapel
-                                              .nama,
+                                    builder: (_) => DetailMateriScreen(
+                                      item: entry.materi,
+                                      namaMapel: entry.mapel.nama,
                                     ),
                                   ),
                                 );
                               }
                             },
                             child: Container(
-                              margin:
-                                  const EdgeInsets
-                                      .only(
-                                bottom: 10,
-                              ),
-                              padding:
-                                  const EdgeInsets
-                                      .all(14),
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    Colors.white,
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                            14),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: const Color(
-                                      0xFFEAEAEA),
+                                  color: const Color(0xFFEAEAEA),
                                 ),
                               ),
                               child: Row(
@@ -422,71 +320,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .start,
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          entry
-                                              .materi
-                                              .judul,
-                                          style:
-                                              const TextStyle(
-                                            fontWeight:
-                                                FontWeight
-                                                    .w700,
-                                            fontFamily:
-                                                'Poppins',
+                                          entry.materi.judul,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'Poppins',
                                           ),
                                         ),
 
-                                        const SizedBox(
-                                            height:
-                                                2),
+                                        const SizedBox(height: 2),
 
                                         Text(
-                                          entry
-                                              .mapel
-                                              .nama,
-                                          style:
-                                              const TextStyle(
-                                            fontSize:
-                                                11,
-                                            color: Color(
-                                                0xFF2E7D32),
-                                            fontFamily:
-                                                'Poppins',
-                                            fontWeight:
-                                                FontWeight
-                                                    .w600,
+                                          entry.mapel.nama,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF2E7D32),
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
 
-                                        if (entry
-                                                .materi
-                                                .konten !=
-                                            null) ...[
-                                          const SizedBox(
-                                              height:
-                                                  2),
+                                        if (entry.materi.konten != null) ...[
+                                          const SizedBox(height: 2),
 
                                           Text(
-                                            entry
-                                                .materi
-                                                .konten!,
-                                            maxLines:
-                                                1,
-                                            overflow:
-                                                TextOverflow
-                                                    .ellipsis,
-                                            style:
-                                                const TextStyle(
-                                              fontSize:
-                                                  12,
-                                              color:
-                                                  Color(
-                                                      0xFF777777),
-                                              fontFamily:
-                                                  'Poppins',
+                                            entry.materi.konten!,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF777777),
+                                              fontFamily: 'Poppins',
                                             ),
                                           ),
                                         ],
@@ -495,10 +361,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
 
                                   const Icon(
-                                    Icons
-                                        .chevron_right_rounded,
-                                    color: Color(
-                                        0xFFCCCCCC),
+                                    Icons.chevron_right_rounded,
+                                    color: Color(0xFFCCCCCC),
                                     size: 20,
                                   ),
                                 ],
@@ -512,48 +376,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ],
 
-                  // AKTIVITAS
                   if (!_isSearching &&
                       ProgressStore.aktivitas
-                          .where(
-                              (e) =>
-                                  !e.isCompleted)
+                          .where((e) => !e.isCompleted)
                           .isNotEmpty) ...[
                     const Text(
                       'Aktivitas terbaru',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight:
-                            FontWeight.w700,
-                        color:
-                            Color(0xFF1A1A1A),
-                        fontFamily:
-                            'Poppins',
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A1A),
+                        fontFamily: 'Poppins',
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
                     ...ProgressStore.aktivitas
-                        .where(
-                          (e) =>
-                              !e.isCompleted,
-                        )
+                        .where((e) => !e.isCompleted)
                         .map(
-                          (a) =>
-                              _AktivitasCard(
+                          (a) => _AktivitasCard(
                             mapel: a.mapel,
-                            materi:
-                                a.materi,
+                            materi: a.materi,
                             onLanjut: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      DetailMateriScreen(
+                                  builder: (_) => DetailMateriScreen(
                                     item: a.item,
-                                    namaMapel:
-                                        a.mapel,
+                                    namaMapel: a.mapel,
                                   ),
                                 ),
                               );
@@ -562,25 +413,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                   ],
 
-                  // MAPEL UTAMA
                   if (!_isSearching) ...[
                     const SizedBox(height: 20),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'Mata Pelajaran',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                FontWeight.w700,
-                            color: Color(
-                                0xFF1A1A1A),
-                            fontFamily:
-                                'Poppins',
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A1A),
+                            fontFamily: 'Poppins',
                           ),
                         ),
 
@@ -590,10 +435,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    const MapelScreen(
-                                  standalone:
-                                      true,
-                                ),
+                                    const MapelScreen(standalone: true),
                               ),
                             );
                           },
@@ -601,13 +443,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             'LIHAT SEMUA ›',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-                              color: Color(
-                                  0xFF2E7D32),
-                              fontFamily:
-                                  'Poppins',
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2E7D32),
+                              fontFamily: 'Poppins',
                             ),
                           ),
                         ),
@@ -619,45 +457,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (provider.isLoading)
                       const Center(
                         child: Padding(
-                          padding:
-                              EdgeInsets.all(
-                                  20),
-                          child:
-                              CircularProgressIndicator(),
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(),
                         ),
                       )
-                    else if (provider.error !=
-                        null)
+                    else if (provider.error != null)
                       Padding(
-                        padding:
-                            const EdgeInsets
-                                .all(20),
+                        padding: const EdgeInsets.all(20),
                         child: Text(
                           provider.error!,
-                          style:
-                              const TextStyle(
-                            fontFamily:
-                                'Poppins',
-                          ),
+                          style: const TextStyle(fontFamily: 'Poppins'),
                         ),
                       )
                     else
-                      ...mapelList.take(3).map(
-                        (m) => _MapelCard(
-                          mapel: m,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    MateriScreen(
-                                  mapel: m,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      ...mapelList
+                          .take(3)
+                          .map(
+                            (m) => _MapelCard(
+                              mapel: m,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MateriScreen(mapel: m),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                   ],
                 ],
               ),
@@ -673,10 +500,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: const Color(0xFF2E7D32),
       padding: EdgeInsets.fromLTRB(
         20,
-        MediaQuery.of(context)
-                .padding
-                .top +
-            16,
+        MediaQuery.of(context).padding.top + 16,
         20,
         20,
       ),
@@ -684,18 +508,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Halo! $_name',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
-                    fontFamily:
-                        'Poppins',
+                    fontFamily: 'Poppins',
                   ),
                 ),
 
@@ -705,10 +526,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'Selamat Datang di Aplikasi',
                   style: TextStyle(
                     fontSize: 13,
-                    color:
-                        Color(0xB3FFFFFF),
-                    fontFamily:
-                        'Poppins',
+                    color: Color(0xB3FFFFFF),
+                    fontFamily: 'Poppins',
                   ),
                 ),
               ],
@@ -719,18 +538,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const NotifikasiScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const NotifikasiScreen()),
               );
 
               if (context.mounted) {
-                context
-                    .read<
-                        NotifikasiProvider>()
-                    .loadNotifikasi(
-                        refresh: true);
+                context.read<NotifikasiProvider>().loadNotifikasi(
+                  refresh: true,
+                );
               }
             },
             child: Stack(
@@ -739,76 +553,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   width: 42,
                   height: 42,
-                  decoration:
-                      BoxDecoration(
-                    shape:
-                        BoxShape.circle,
-                    color: Colors.white
-                        .withOpacity(0.2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
                   ),
                   child: const Icon(
-                    Icons
-                        .notifications_outlined,
+                    Icons.notifications_outlined,
                     color: Colors.white,
                     size: 22,
                   ),
                 ),
 
-                Consumer<
-                    NotifikasiProvider>(
-                  builder:
-                      (context, prov, _) {
-                    if (prov.unreadCount ==
-                        0) {
-                      return const SizedBox
-                          .shrink();
+                Consumer<NotifikasiProvider>(
+                  builder: (context, prov, _) {
+                    if (prov.unreadCount == 0) {
+                      return const SizedBox.shrink();
                     }
 
                     return Positioned(
                       top: -4,
                       right: -4,
                       child: Container(
-                        padding:
-                            const EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 4,
                           vertical: 1,
                         ),
-                        constraints:
-                            const BoxConstraints(
+                        constraints: const BoxConstraints(
                           minWidth: 16,
                           minHeight: 16,
                         ),
-                        decoration:
-                            BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.red,
-                          borderRadius:
-                              BorderRadius
-                                  .circular(
-                                      8),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: const Color(
-                                0xFF2E7D32),
+                            color: const Color(0xFF2E7D32),
                             width: 1.5,
                           ),
                         ),
                         child: Text(
-                          prov.unreadCount >
-                                  99
-                              ? '99+'
-                              : '${prov.unreadCount}',
-                          style:
-                              const TextStyle(
+                          prov.unreadCount > 99 ? '99+' : '${prov.unreadCount}',
+                          style: const TextStyle(
                             fontSize: 9,
-                            fontWeight:
-                                FontWeight
-                                    .w800,
-                            color:
-                                Colors.white,
-                            fontFamily:
-                                'Poppins',
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
                           ),
-                          textAlign:
-                              TextAlign.center,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     );
@@ -826,32 +616,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
-              border: Border.all(
-                color:
-                    const Color(0xFFF5A623),
-                width: 2.5,
-              ),
+              border: Border.all(color: const Color(0xFFF5A623), width: 2.5),
             ),
             child: ClipOval(
               child: _foto.isNotEmpty
                   ? Image.network(
                       _foto,
                       fit: BoxFit.cover,
-                      errorBuilder:
-                          (_, __, ___) {
+                      errorBuilder: (_, __, ___) {
                         return Center(
                           child: Text(
                             _initials,
-                            style:
-                                const TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
-                              fontWeight:
-                                  FontWeight
-                                      .w800,
-                              color: Color(
-                                  0xFF2E7D32),
-                              fontFamily:
-                                  'Poppins',
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2E7D32),
+                              fontFamily: 'Poppins',
                             ),
                           ),
                         );
@@ -860,15 +640,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   : Center(
                       child: Text(
                         _initials,
-                        style:
-                            const TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
-                          fontWeight:
-                              FontWeight.w800,
-                          color: Color(
-                              0xFF2E7D32),
-                          fontFamily:
-                              'Poppins',
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2E7D32),
+                          fontFamily: 'Poppins',
                         ),
                       ),
                     ),
@@ -879,8 +655,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
-
-// ─────────────────────────────────────────────
 
 class _AktivitasCard extends StatelessWidget {
   final String mapel;
@@ -896,38 +670,26 @@ class _AktivitasCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin:
-          const EdgeInsets.only(bottom: 10),
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
-      ),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFEEEEEE),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
       ),
       child: Row(
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   mapel,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight:
-                        FontWeight.w700,
-                    color:
-                        Color(0xFF1A1A1A),
-                    fontFamily:
-                        'Poppins',
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A1A),
+                    fontFamily: 'Poppins',
                   ),
                 ),
 
@@ -937,10 +699,8 @@ class _AktivitasCard extends StatelessWidget {
                   materi,
                   style: const TextStyle(
                     fontSize: 12,
-                    color:
-                        Color(0xFF888888),
-                    fontFamily:
-                        'Poppins',
+                    color: Color(0xFF888888),
+                    fontFamily: 'Poppins',
                   ),
                 ),
               ],
@@ -952,27 +712,18 @@ class _AktivitasCard extends StatelessWidget {
           GestureDetector(
             onTap: onLanjut,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color:
-                    const Color(0xFFF5A623),
-                borderRadius:
-                    BorderRadius.circular(
-                        10),
+                color: const Color(0xFFF5A623),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
                 'Lanjutkan',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight:
-                      FontWeight.w700,
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  fontFamily:
-                      'Poppins',
+                  fontFamily: 'Poppins',
                 ),
               ),
             ),
@@ -987,31 +738,19 @@ class _MapelCard extends StatelessWidget {
   final MapelModel mapel;
   final VoidCallback onTap;
 
-  const _MapelCard({
-    required this.mapel,
-    required this.onTap,
-  });
+  const _MapelCard({required this.mapel, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin:
-            const EdgeInsets.only(bottom: 10),
-        padding:
-            const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius:
-              BorderRadius.circular(16),
-          border: Border.all(
-            color:
-                const Color(0xFFEEEEEE),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
         child: Row(
           children: [
@@ -1020,34 +759,24 @@ class _MapelCard extends StatelessWidget {
               height: 46,
               decoration: BoxDecoration(
                 color: mapel.iconBg,
-                borderRadius:
-                    BorderRadius.circular(
-                        12),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                mapel.icon,
-                color: mapel.iconColor,
-                size: 22,
-              ),
+              child: Icon(mapel.icon, color: mapel.iconColor, size: 22),
             ),
 
             const SizedBox(width: 14),
 
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     mapel.nama,
                     style: const TextStyle(
                       fontSize: 14,
-                      fontWeight:
-                          FontWeight.w700,
-                      color:
-                          Color(0xFF1A1A1A),
-                      fontFamily:
-                          'Poppins',
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A),
+                      fontFamily: 'Poppins',
                     ),
                   ),
 
@@ -1057,10 +786,8 @@ class _MapelCard extends StatelessWidget {
                     '${mapel.jumlahMateri} Materi · ${mapel.jumlahProyek} Proyek',
                     style: const TextStyle(
                       fontSize: 12,
-                      color:
-                          Color(0xFF888888),
-                      fontFamily:
-                          'Poppins',
+                      color: Color(0xFF888888),
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ],

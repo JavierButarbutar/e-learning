@@ -5,21 +5,11 @@ import '../data/models/kuis_model.dart';
 import '../data/models/soal_model.dart';
 import '../data/repositories/kuis_repository.dart';
 
-/// Mengelola seluruh state dan logika kuis:
-/// - Flow API: detail → start → getSoal → submit
-/// - Timer countdown (sinkron dengan batas_waktu dari server)
-/// - Navigasi antar soal
-/// - Menyimpan jawaban (id_pilihan untuk pilgan, teks untuk essay)
-/// - Exit warning: peringatan di keluar ke-1 & ke-2, auto-submit di ke-3
 class KuisProvider extends ChangeNotifier {
-
-  // ── State utama ───────────────────────────────────────────────────────────
   KuisModel? _kuis;
   SesiKuisModel? _sesi;
   int _currentSoal = 0;
 
-  /// Key: id_soal (int)
-  /// Value: id_pilihan (int) untuk pilgan, teks (String) untuk essay
   final Map<int, dynamic> _jawaban = {};
   final Map<int, TextEditingController> _esaiCtrl = {};
 
@@ -28,17 +18,14 @@ class KuisProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   bool _selesai = false;
-  bool _isSubmitting = false; // ← mencegah double-submit
+  bool _isSubmitting = false;
   String? _errorMessage;
 
-  // ── State exit warning ────────────────────────────────────────────────────
   int _jumlahKeluar = 0;
   static const int _batasAutoSubmit = 3;
 
-  // ── Hasil submit ──────────────────────────────────────────────────────────
   Map<String, dynamic>? _hasilSubmit;
 
-  // ── Getter ────────────────────────────────────────────────────────────────
   KuisModel? get kuis => _kuis;
   SesiKuisModel? get sesi => _sesi;
   List<SoalModel> get soalList => _kuis?.soalList ?? [];
@@ -47,6 +34,7 @@ class KuisProvider extends ChangeNotifier {
   int get sisaDetik => _sisaDetik;
   bool get isLoading => _isLoading;
   bool get selesai => _selesai;
+  bool get isSubmitting => _isSubmitting;
   String? get errorMessage => _errorMessage;
   int get jumlahKeluar => _jumlahKeluar;
   Map<String, dynamic>? get hasilSubmit => _hasilSubmit;
@@ -60,9 +48,7 @@ class KuisProvider extends ChangeNotifier {
 
   bool sudahDijawab(int idSoal) => _jawaban.containsKey(idSoal);
 
-  /// Hitung jawaban terisi — termasuk essay yang sedang diketik
   int get jumlahTerjawab {
-    // Sync dulu jawaban essay dari controller ke _jawaban
     for (final entry in _esaiCtrl.entries) {
       final teks = entry.value.text.trim();
       if (teks.isNotEmpty) {
@@ -72,11 +58,9 @@ class KuisProvider extends ChangeNotifier {
     return _jawaban.length;
   }
 
-  /// Peringatan ke-1 atau ke-2 (belum auto-submit)
   bool get tampilkanPeringatan =>
       _jumlahKeluar > 0 && _jumlahKeluar < _batasAutoSubmit;
 
-  /// Sisa kesempatan sebelum auto-submit
   int get sisaKesempatan => _batasAutoSubmit - _jumlahKeluar;
 
   String get timerLabel {
@@ -91,7 +75,6 @@ class KuisProvider extends ChangeNotifier {
     return const Color(0xFF2E7D32);
   }
 
-  // ── Init kuis — flow lengkap: detail → start → getSoal ───────────────────
   Future<void> initKuis({required int kuisId}) async {
     _setLoading(true);
     _errorMessage = null;
@@ -104,26 +87,26 @@ class KuisProvider extends ChangeNotifier {
     try {
       final token = await SharedPref.getToken() ?? '';
 
-      // 1. Ambil detail kuis
-      _kuis = await KuisRepository.getDetailKuis(
-          token: token, kuisId: kuisId);
+      _kuis = await KuisRepository.getDetailKuis(token: token, kuisId: kuisId);
       if (_kuis == null) {
         _errorMessage = 'Kuis tidak ditemukan';
         return;
       }
 
-      // 2. Mulai / resume sesi
       final startResult = await KuisRepository.startKuis(
-          token: token, kuisId: kuisId);
+        token: token,
+        kuisId: kuisId,
+      );
       if (startResult['success'] != true) {
         _errorMessage = startResult['message'] ?? 'Gagal memulai kuis';
         return;
       }
       _sesi = SesiKuisModel.fromJson(startResult['data']);
 
-      // 3. Ambil soal
-      final soalResult =
-          await KuisRepository.getSoal(token: token, kuisId: kuisId);
+      final soalResult = await KuisRepository.getSoal(
+        token: token,
+        kuisId: kuisId,
+      );
       if (soalResult['success'] != true) {
         _errorMessage = soalResult['message'] ?? 'Gagal mengambil soal';
         return;
@@ -132,12 +115,10 @@ class KuisProvider extends ChangeNotifier {
       final soalList = soalResult['soalList'] as List<SoalModel>;
       _kuis = _kuis!.copyWithSoal(soalList);
 
-      // 4. Restore jawaban tersimpan (fitur resume)
       final jawabanTersimpan =
           soalResult['jawabanTersimpan'] as Map<int, dynamic>? ?? {};
       _jawaban.addAll(jawabanTersimpan);
 
-      // 5. Buat controller esai
       _esaiCtrl.clear();
       for (final s in soalList) {
         if (s.tipe == TipeSoal.esai) {
@@ -147,7 +128,6 @@ class KuisProvider extends ChangeNotifier {
         }
       }
 
-      // 6. Set timer dari batas waktu server
       _sisaDetik = _sesi!.sisaDetik;
       _currentSoal = 0;
       _startTimer();
@@ -158,7 +138,6 @@ class KuisProvider extends ChangeNotifier {
     }
   }
 
-  // ── Timer ─────────────────────────────────────────────────────────────────
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -172,7 +151,6 @@ class KuisProvider extends ChangeNotifier {
     });
   }
 
-  // ── Navigasi soal ─────────────────────────────────────────────────────────
   void next() {
     if (!isLastSoal) {
       _currentSoal++;
@@ -194,7 +172,6 @@ class KuisProvider extends ChangeNotifier {
     }
   }
 
-  // ── Jawaban ───────────────────────────────────────────────────────────────
   void pilihJawaban(int idSoal, int idPilihan) {
     _jawaban[idSoal] = idPilihan;
     notifyListeners();
@@ -206,21 +183,15 @@ class KuisProvider extends ChangeNotifier {
     } else {
       _jawaban[idSoal] = teks.trim();
     }
-    // Tidak perlu notifyListeners — TextField update sendiri
   }
 
-  // ── Exit warning logic ────────────────────────────────────────────────────
-  /// Dipanggil dari WidgetsBindingObserver saat app di-background.
-  /// Return true jika sudah auto-submit (keluar ke-3).
   Future<bool> onAppBackground() async {
-    // Kalau sudah selesai atau sedang submit, abaikan
     if (_selesai || _isSubmitting) return _selesai;
 
     _jumlahKeluar++;
     notifyListeners();
 
     if (_jumlahKeluar >= _batasAutoSubmit) {
-      // ── Sync jawaban essay sebelum submit ──
       _syncEsaiBeforeSubmit();
       await submitKuis(autoSubmit: true);
       return true;
@@ -228,8 +199,6 @@ class KuisProvider extends ChangeNotifier {
     return false;
   }
 
-  /// Sync semua TextEditingController essay ke _jawaban
-  /// sebelum submit agar tidak kehilangan jawaban yang sedang diketik
   void _syncEsaiBeforeSubmit() {
     for (final entry in _esaiCtrl.entries) {
       final teks = entry.value.text.trim();
@@ -241,16 +210,11 @@ class KuisProvider extends ChangeNotifier {
     }
   }
 
-  // ── Submit ────────────────────────────────────────────────────────────────
-  /// [autoSubmit] true → dipanggil otomatis (waktu habis / keluar 3x)
   Future<void> submitKuis({bool autoSubmit = false}) async {
-    // Cegah double-submit
     if (_isSubmitting || _selesai) return;
     _isSubmitting = true;
 
     _timer?.cancel();
-
-    // Sync essay sebelum submit (untuk submit manual juga)
     _syncEsaiBeforeSubmit();
 
     _selesai = true;
@@ -259,12 +223,10 @@ class KuisProvider extends ChangeNotifier {
     try {
       final token = await SharedPref.getToken() ?? '';
 
-      // Kirim jawaban apa adanya — bisa kosong {} kalau belum ada yang dijawab
-      // Backend akan hitung tidak_dijawab untuk soal yang tidak ada di map ini
       final result = await KuisRepository.submitJawaban(
         token: token,
         kuisId: _kuis?.id ?? 0,
-        jawaban: Map<int, dynamic>.from(_jawaban), // copy agar tidak berubah
+        jawaban: Map<int, dynamic>.from(_jawaban),
       );
 
       if (result['success'] == true) {
@@ -281,7 +243,6 @@ class KuisProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Dispose ───────────────────────────────────────────────────────────────
   @override
   void dispose() {
     _timer?.cancel();
@@ -291,7 +252,6 @@ class KuisProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  // ── Helper ────────────────────────────────────────────────────────────────
   void _setLoading(bool val) {
     _isLoading = val;
     notifyListeners();

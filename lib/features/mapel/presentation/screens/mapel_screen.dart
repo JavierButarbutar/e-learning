@@ -9,10 +9,7 @@ import 'materi_screen.dart';
 class MapelScreen extends StatefulWidget {
   final bool standalone;
 
-  const MapelScreen({
-    super.key,
-    this.standalone = false,
-  });
+  const MapelScreen({super.key, this.standalone = false});
 
   @override
   State<MapelScreen> createState() => _MapelScreenState();
@@ -44,15 +41,10 @@ class _MapelScreenState extends State<MapelScreen> {
 
       body: Consumer<MapelProvider>(
         builder: (context, provider, child) {
-
-          // LOADING
           if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
-          // ERROR
           if (provider.error != null) {
             return Center(
               child: Padding(
@@ -73,7 +65,6 @@ class _MapelScreenState extends State<MapelScreen> {
 
           return Column(
             children: [
-              // HEADER
               Container(
                 color: const Color(0xFF2E7D32),
                 padding: EdgeInsets.fromLTRB(
@@ -155,7 +146,7 @@ class _MapelScreenState extends State<MapelScreen> {
 
                           const SizedBox(height: 6),
 
-                         Text(
+                          Text(
                             _name,
                             style: TextStyle(
                               fontSize: 13,
@@ -173,7 +164,6 @@ class _MapelScreenState extends State<MapelScreen> {
                 ),
               ),
 
-              // LIST MAPEL
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
@@ -220,9 +210,7 @@ class _MapelScreenState extends State<MapelScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => MateriScreen(
-                                      mapel: m,
-                                    ),
+                                    builder: (_) => MateriScreen(mapel: m),
                                   ),
                                 );
                               },
@@ -245,10 +233,7 @@ class _MapelTile extends StatelessWidget {
   final MapelModel mapel;
   final VoidCallback onTap;
 
-  const _MapelTile({
-    required this.mapel,
-    required this.onTap,
-  });
+  const _MapelTile({required this.mapel, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -257,17 +242,12 @@ class _MapelTile extends StatelessWidget {
 
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
 
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFEEEEEE),
-          ),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
 
         child: Row(
@@ -281,11 +261,7 @@ class _MapelTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
 
-              child: Icon(
-                mapel.icon,
-                color: mapel.iconColor,
-                size: 22,
-              ),
+              child: Icon(mapel.icon, color: mapel.iconColor, size: 22),
             ),
 
             const SizedBox(width: 14),

@@ -35,24 +35,16 @@ class SuccessDialog extends StatelessWidget {
         : const Color(0xFFE8F5E9);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(26),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ───────────────────────────────────────────
-            // ICON
-            // ───────────────────────────────────────────
             Container(
               width: 78,
               height: 78,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: bgColor,
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: bgColor),
               child: Icon(
                 isTerlambat
                     ? Icons.access_time_rounded
@@ -64,9 +56,6 @@ class SuccessDialog extends StatelessWidget {
 
             const SizedBox(height: 18),
 
-            // ───────────────────────────────────────────
-            // TITLE
-            // ───────────────────────────────────────────
             Text(
               title,
               textAlign: TextAlign.center,
@@ -80,9 +69,6 @@ class SuccessDialog extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // ───────────────────────────────────────────
-            // SUBTITLE
-            // ───────────────────────────────────────────
             Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -96,9 +82,6 @@ class SuccessDialog extends StatelessWidget {
 
             const SizedBox(height: 22),
 
-            // ───────────────────────────────────────────
-            // DETAIL CARD
-            // ───────────────────────────────────────────
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -136,8 +119,7 @@ class SuccessDialog extends StatelessWidget {
                     _DetailTile(
                       icon: Icons.location_on_outlined,
                       label: 'Jarak',
-                      value:
-                          '${jarak!.toStringAsFixed(0)} meter',
+                      value: '${jarak!.toStringAsFixed(0)} meter',
                     ),
                   ],
                 ],
@@ -146,9 +128,6 @@ class SuccessDialog extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ───────────────────────────────────────────
-            // BUTTON
-            // ───────────────────────────────────────────
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -157,12 +136,9 @@ class SuccessDialog extends StatelessWidget {
                   backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: const Text(
@@ -182,9 +158,6 @@ class SuccessDialog extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// DETAIL TILE
-// ─────────────────────────────────────────────────────────────
 class _DetailTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -200,18 +173,13 @@ class _DetailTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: const Color(0xFF888888),
-        ),
+        Icon(icon, size: 18, color: const Color(0xFF888888)),
 
         const SizedBox(width: 10),
 
         Expanded(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,

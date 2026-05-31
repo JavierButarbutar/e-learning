@@ -3,41 +3,25 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/constants/api_endpoints.dart';
 
-// ─────────────────────────────────────────────────────────────
-// PRESENSI SERVICE
-// Raw HTTP call + debug response
-// ─────────────────────────────────────────────────────────────
 class PresensiService {
   final http.Client _client;
 
-  PresensiService({http.Client? client})
-      : _client = client ?? http.Client();
+  PresensiService({http.Client? client}) : _client = client ?? http.Client();
 
-  // ────────────────────────────────────────────────────────────
-  // HEADER
-  // ────────────────────────────────────────────────────────────
   Map<String, String> _headers(String token) => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer $token',
+  };
 
-  // ────────────────────────────────────────────────────────────
-  // GET ACTIVE PRESENSI
-  // ────────────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> getActivePresensi(
-    String token,
-  ) async {
+  Future<Map<String, dynamic>> getActivePresensi(String token) async {
     final uri = Uri.parse(ApiEndpoint.presensiAktif);
 
     print('================ ACTIVE PRESENSI ================');
     print('URL: $uri');
     print('TOKEN: $token');
 
-    final response = await _client.get(
-      uri,
-      headers: _headers(token),
-    );
+    final response = await _client.get(uri, headers: _headers(token));
 
     print('STATUS: ${response.statusCode}');
     print('BODY: ${response.body}');
@@ -45,9 +29,6 @@ class PresensiService {
     return _parseResponse(response);
   }
 
-  // ────────────────────────────────────────────────────────────
-  // POST SCAN QR
-  // ────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> scanQr({
     required String token,
     required String qrCode,
@@ -79,9 +60,6 @@ class PresensiService {
     return _parseResponse(response);
   }
 
-  // ────────────────────────────────────────────────────────────
-  // GET RIWAYAT
-  // ────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> getRiwayat(
     String token, {
     String? tanggalMulai,
@@ -91,25 +69,20 @@ class PresensiService {
   }) async {
     final queryParams = {
       'page': page.toString(),
-      if (tanggalMulai != null)
-        'tanggal_mulai': tanggalMulai,
-      if (tanggalSelesai != null)
-        'tanggal_selesai': tanggalSelesai,
-      if (mapelId != null)
-        'mapel_id': mapelId.toString(),
+      if (tanggalMulai != null) 'tanggal_mulai': tanggalMulai,
+      if (tanggalSelesai != null) 'tanggal_selesai': tanggalSelesai,
+      if (mapelId != null) 'mapel_id': mapelId.toString(),
     };
 
-    final uri = Uri.parse(ApiEndpoint.presensiRiwayat)
-        .replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      ApiEndpoint.presensiRiwayat,
+    ).replace(queryParameters: queryParams);
 
     print('================ RIWAYAT ================');
     print('URL: $uri');
     print('TOKEN: $token');
 
-    final response = await _client.get(
-      uri,
-      headers: _headers(token),
-    );
+    final response = await _client.get(uri, headers: _headers(token));
 
     print('STATUS: ${response.statusCode}');
     print('BODY: ${response.body}');
@@ -117,9 +90,6 @@ class PresensiService {
     return _parseResponse(response);
   }
 
-  // ────────────────────────────────────────────────────────────
-  // GET REKAP
-  // ────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> getRekap(
     String token, {
     int? bulan,
@@ -130,20 +100,15 @@ class PresensiService {
       if (tahun != null) 'tahun': tahun.toString(),
     };
 
-    final uri = Uri.parse(ApiEndpoint.presensiRekap)
-        .replace(
-      queryParameters:
-          queryParams.isEmpty ? null : queryParams,
-    );
+    final uri = Uri.parse(
+      ApiEndpoint.presensiRekap,
+    ).replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
     print('================ REKAP ================');
     print('URL: $uri');
     print('TOKEN: $token');
 
-    final response = await _client.get(
-      uri,
-      headers: _headers(token),
-    );
+    final response = await _client.get(uri, headers: _headers(token));
 
     print('STATUS: ${response.statusCode}');
     print('BODY: ${response.body}');
@@ -151,12 +116,7 @@ class PresensiService {
     return _parseResponse(response);
   }
 
-  // ────────────────────────────────────────────────────────────
-  // PARSE RESPONSE
-  // ────────────────────────────────────────────────────────────
-  Map<String, dynamic> _parseResponse(
-    http.Response response,
-  ) {
+  Map<String, dynamic> _parseResponse(http.Response response) {
     try {
       final decoded = json.decode(response.body);
 
@@ -167,37 +127,27 @@ class PresensiService {
         );
       }
 
-      // SUCCESS
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return decoded;
       }
 
-      // ERROR
       final message =
-          decoded['message']?.toString() ??
-              'Terjadi kesalahan pada server';
+          decoded['message']?.toString() ?? 'Terjadi kesalahan pada server';
 
       throw PresensiException(
         message: message,
         statusCode: response.statusCode,
-        data: decoded['data'] is Map<String, dynamic>
-            ? decoded['data']
-            : null,
+        data: decoded['data'] is Map<String, dynamic> ? decoded['data'] : null,
       );
     } catch (e) {
       throw PresensiException(
-        message:
-            'Gagal parsing response server: $e',
+        message: 'Gagal parsing response server: $e',
         statusCode: response.statusCode,
       );
     }
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// CUSTOM EXCEPTION
-// ─────────────────────────────────────────────────────────────
 class PresensiException implements Exception {
   final String message;
   final int statusCode;

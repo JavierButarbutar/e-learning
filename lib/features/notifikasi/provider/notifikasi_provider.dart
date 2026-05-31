@@ -16,7 +16,6 @@ class NotifikasiProvider extends ChangeNotifier {
   String? get error => _error;
   bool get hasMore => _hasMore;
 
-  // ── Muat pertama kali / refresh ──────────────────────────────────────────
   Future<void> loadNotifikasi({bool refresh = false}) async {
     if (refresh) {
       _currentPage = 1;
@@ -31,8 +30,9 @@ class NotifikasiProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result =
-          await NotifikasiRepository.getNotifikasi(page: _currentPage);
+      final result = await NotifikasiRepository.getNotifikasi(
+        page: _currentPage,
+      );
 
       final newData = result['data'] as List<NotifikasiModel>;
       final pagination = result['pagination'];
@@ -52,7 +52,6 @@ class NotifikasiProvider extends ChangeNotifier {
     }
   }
 
-  // ── Tandai satu dibaca ───────────────────────────────────────────────────
   Future<void> bacaNotifikasi(int id) async {
     await NotifikasiRepository.bacaNotifikasi(id);
     final idx = _list.indexWhere((n) => n.idNotifikasi == id);
@@ -71,25 +70,25 @@ class NotifikasiProvider extends ChangeNotifier {
     }
   }
 
-  // ── Tandai semua dibaca ──────────────────────────────────────────────────
   Future<void> bacaSemua() async {
     await NotifikasiRepository.bacaSemua();
     _list = _list
-        .map((n) => NotifikasiModel(
-              idNotifikasi: n.idNotifikasi,
-              tipe: n.tipe,
-              judul: n.judul,
-              isi: n.isi,
-              data: n.data,
-              isRead: true,
-              createdAt: n.createdAt,
-            ))
+        .map(
+          (n) => NotifikasiModel(
+            idNotifikasi: n.idNotifikasi,
+            tipe: n.tipe,
+            judul: n.judul,
+            isi: n.isi,
+            data: n.data,
+            isRead: true,
+            createdAt: n.createdAt,
+          ),
+        )
         .toList();
     _unreadCount = 0;
     notifyListeners();
   }
 
-  // ── Refresh unread count saja (untuk badge navbar) ───────────────────────
   Future<void> refreshUnreadCount() async {
     _unreadCount = await NotifikasiRepository.getUnreadCount();
     notifyListeners();

@@ -1,4 +1,3 @@
-/// Base model user — field yang dimiliki semua role
 abstract class UserModel {
   final String role;
   final String name;
@@ -12,10 +11,8 @@ abstract class UserModel {
     required this.foto,
   });
 
-  /// Konversi ke Map untuk disimpan ke SharedPreferences
   Map<String, dynamic> toMap();
 
-  /// Factory: buat UserModel yang sesuai role dari raw Map response API
   factory UserModel.fromMap(Map<String, dynamic> map) {
     final role = map['role'] ?? '';
     if (role == 'siswa') return SiswaModel.fromMap(map);
@@ -23,8 +20,6 @@ abstract class UserModel {
     throw Exception('Role tidak dikenali: $role');
   }
 }
-
-// ── Model Siswa ───────────────────────────────────────────────────────────────
 
 class SiswaModel extends UserModel {
   final String nis;
@@ -50,16 +45,14 @@ class SiswaModel extends UserModel {
 
   @override
   Map<String, dynamic> toMap() => {
-        'role': role,
-        'name': name,
-        'email': email,
-        'foto': foto,
-        'nis': nis,
-        'kelas': kelas,
-      };
+    'role': role,
+    'name': name,
+    'email': email,
+    'foto': foto,
+    'nis': nis,
+    'kelas': kelas,
+  };
 }
-
-// ── Model Guru ────────────────────────────────────────────────────────────────
 
 class GuruModel extends UserModel {
   final String nip;
@@ -91,13 +84,13 @@ class GuruModel extends UserModel {
 
   @override
   Map<String, dynamic> toMap() => {
-        'role': role,
-        'name': name,
-        'email': email,
-        'foto': foto,
-        'nip': nip,
-        'nama_mapel': namaMapel,
-        'no_telp': noTelp,
-        'alamat': alamat,
-      };
+    'role': role,
+    'name': name,
+    'email': email,
+    'foto': foto,
+    'nip': nip,
+    'nama_mapel': namaMapel,
+    'no_telp': noTelp,
+    'alamat': alamat,
+  };
 }

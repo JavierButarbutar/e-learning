@@ -5,12 +5,10 @@ class InformasiPribadiScreen extends StatefulWidget {
   const InformasiPribadiScreen({super.key});
 
   @override
-  State<InformasiPribadiScreen> createState() =>
-      _InformasiPribadiScreenState();
+  State<InformasiPribadiScreen> createState() => _InformasiPribadiScreenState();
 }
 
 class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
-
   String nama = '-';
   String foto = '';
   String nisn = '-';
@@ -47,24 +45,15 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
 
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-
           : Column(
               children: [
-
-                /// ================= HEADER =================
                 Container(
                   width: double.infinity,
                   color: const Color(0xFF2E7D32),
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    topSafe + 12,
-                    16,
-                    18,
-                  ),
+                  padding: EdgeInsets.fromLTRB(16, topSafe + 12, 16, 18),
 
                   child: Row(
                     children: [
-
                       InkWell(
                         onTap: () => Navigator.pop(context),
                         borderRadius: BorderRadius.circular(30),
@@ -100,17 +89,14 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
                   ),
                 ),
 
-                /// ================= CONTENT =================
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
 
                     child: Column(
                       children: [
-
                         const SizedBox(height: 8),
 
-                        /// ================= FOTO =================
                         Container(
                           width: 108,
                           height: 108,
@@ -149,20 +135,16 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
 
                         const SizedBox(height: 22),
 
-                        /// ================= CARD INFO =================
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: const Color(0xFFEAEAEA),
-                            ),
+                            border: Border.all(color: const Color(0xFFEAEAEA)),
                           ),
 
                           child: Column(
                             children: [
-
                               _infoItem('Nama Lengkap', nama),
 
                               const _DividerLine(),
@@ -184,7 +166,6 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
     );
   }
 
-  /// ================= DEFAULT AVATAR =================
   Widget _defaultAvatar() {
     return Container(
       color: Colors.grey.shade200,
@@ -196,20 +177,17 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
     );
   }
 
-  /// ================= INFO ITEM =================
   Widget _infoItem(String label, String value) {
     return Padding(
       padding: const EdgeInsets.all(16),
 
       child: Row(
         children: [
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 Text(
                   label,
                   style: const TextStyle(
@@ -238,7 +216,6 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
   }
 }
 
-/// ================= DIVIDER =================
 class _DividerLine extends StatelessWidget {
   const _DividerLine();
 

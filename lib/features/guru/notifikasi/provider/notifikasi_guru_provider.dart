@@ -31,7 +31,8 @@ class NotifikasiGuruProvider extends ChangeNotifier {
 
     try {
       final result = await NotifikasiGuruRepository.getNotifikasi(
-          page: _currentPage);
+        page: _currentPage,
+      );
 
       final newData = result['data'] as List<NotifikasiGuruModel>;
       final pagination = result['pagination'];
@@ -72,15 +73,17 @@ class NotifikasiGuruProvider extends ChangeNotifier {
   Future<void> bacaSemua() async {
     await NotifikasiGuruRepository.bacaSemua();
     _list = _list
-        .map((n) => NotifikasiGuruModel(
-              idNotifikasi: n.idNotifikasi,
-              tipe: n.tipe,
-              judul: n.judul,
-              isi: n.isi,
-              data: n.data,
-              isRead: true,
-              createdAt: n.createdAt,
-            ))
+        .map(
+          (n) => NotifikasiGuruModel(
+            idNotifikasi: n.idNotifikasi,
+            tipe: n.tipe,
+            judul: n.judul,
+            isi: n.isi,
+            data: n.data,
+            isRead: true,
+            createdAt: n.createdAt,
+          ),
+        )
         .toList();
     _unreadCount = 0;
     notifyListeners();

@@ -42,14 +42,9 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
 
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-
-                // ================= HEADER =================
                 Container(
                   width: double.infinity,
                   color: const Color(0xFF2E7D32),
@@ -63,8 +58,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
 
                   child: Column(
                     children: [
-
-                      // FOTO
                       Container(
                         width: 90,
                         height: 90,
@@ -93,7 +86,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
 
                       const SizedBox(height: 12),
 
-                      // NAMA
                       Text(
                         name,
                         textAlign: TextAlign.center,
@@ -108,7 +100,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
 
                       const SizedBox(height: 4),
 
-                      // MAPEL
                       Text(
                         mapel,
                         style: TextStyle(
@@ -121,14 +112,12 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
                   ),
                 ),
 
-                // ================= MENU =================
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
 
                     child: Column(
                       children: [
-
                         _MenuCard(
                           icon: Icons.person_outline_rounded,
                           label: 'Informasi Pribadi',
@@ -147,16 +136,13 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
 
                         const SizedBox(height: 16),
 
-                        // LOGOUT
                         GestureDetector(
                           onTap: () => _showLogoutDialog(context),
 
                           child: Container(
                             width: double.infinity,
 
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
 
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFEBEE),
@@ -171,7 +157,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
 
                               children: [
-
                                 Icon(
                                   Icons.logout_rounded,
                                   color: Color(0xFFE53935),
@@ -199,7 +184,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
     );
   }
 
-  // ================= DEFAULT AVATAR =================
   Widget _defaultAvatar() {
     return Container(
       color: Colors.grey.shade200,
@@ -212,7 +196,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
     );
   }
 
-  // ================= LOGOUT =================
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -220,12 +203,9 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
       builder: (_) => AlertDialog(
         title: const Text('Keluar Akun?'),
 
-        content: const Text(
-          'Apakah kamu yakin ingin keluar?',
-        ),
+        content: const Text('Apakah kamu yakin ingin keluar?'),
 
         actions: [
-
           TextButton(
             onPressed: () => Navigator.pop(context),
 
@@ -253,7 +233,6 @@ class _ProfilGuruScreenState extends State<ProfilGuruScreen> {
   }
 }
 
-// ================= MENU CARD =================
 class _MenuCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -273,23 +252,17 @@ class _MenuCard extends StatelessWidget {
       onTap: onTap,
 
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
 
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
 
-          border: Border.all(
-            color: const Color(0xFFEEEEEE),
-          ),
+          border: Border.all(color: const Color(0xFFEEEEEE)),
         ),
 
         child: Row(
           children: [
-
             Container(
               width: 42,
               height: 42,
@@ -299,11 +272,7 @@ class _MenuCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
 
-              child: Icon(
-                icon,
-                color: const Color(0xFF2E7D32),
-                size: 22,
-              ),
+              child: Icon(icon, color: const Color(0xFF2E7D32), size: 22),
             ),
 
             const SizedBox(width: 14),
@@ -313,7 +282,6 @@ class _MenuCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
-
                   Text(
                     label,
 
@@ -352,9 +320,6 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
-// =======================================================
-// INFORMASI PRIBADI GURU
-// =======================================================
 class InformasiPribadiGuruScreen extends StatefulWidget {
   const InformasiPribadiGuruScreen({super.key});
 
@@ -365,7 +330,6 @@ class InformasiPribadiGuruScreen extends StatefulWidget {
 
 class _InformasiPribadiGuruScreenState
     extends State<InformasiPribadiGuruScreen> {
-
   Map<String, dynamic>? user;
   bool isLoading = true;
 
@@ -391,7 +355,6 @@ class _InformasiPribadiGuruScreenState
 
   @override
   Widget build(BuildContext context) {
-
     final name = user?['name'] ?? '-';
     final nip = user?['nip'] ?? '-';
     final mapel = user?['nama_mapel'] ?? '-';
@@ -404,14 +367,9 @@ class _InformasiPribadiGuruScreenState
       backgroundColor: const Color(0xFFF5F5F5),
 
       body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-
-                // HEADER
                 Container(
                   color: const Color(0xFF2E7D32),
 
@@ -424,7 +382,6 @@ class _InformasiPribadiGuruScreenState
 
                   child: Row(
                     children: [
-
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
 
@@ -467,8 +424,6 @@ class _InformasiPribadiGuruScreenState
 
                     child: Column(
                       children: [
-
-                        // FOTO
                         Container(
                           width: 90,
                           height: 90,
@@ -523,27 +478,13 @@ class _InformasiPribadiGuruScreenState
                         const SizedBox(height: 24),
 
                         _infoCard([
+                          _infoItem('Nama Lengkap', name),
 
-                          _infoItem(
-                            'Nama Lengkap',
-                            name,
-                          ),
+                          _infoItem('NIP', nip),
 
-                          _infoItem(
-                            'NIP',
-                            nip,
-                          ),
+                          _infoItem('Mata Pelajaran', mapel),
 
-                          _infoItem(
-                            'Mata Pelajaran',
-                            mapel,
-                          ),
-
-                          _infoItem(
-                            'Email',
-                            email,
-                            Icons.email_outlined,
-                          ),
+                          _infoItem('Email', email, Icons.email_outlined),
 
                           _infoItem(
                             'Nomor Telepon',
@@ -567,14 +508,11 @@ class _InformasiPribadiGuruScreenState
                             color: const Color(0xFFFFF8E1),
                             borderRadius: BorderRadius.circular(12),
 
-                            border: Border.all(
-                              color: const Color(0xFFFFE082),
-                            ),
+                            border: Border.all(color: const Color(0xFFFFE082)),
                           ),
 
                           child: const Row(
                             children: [
-
                               Icon(
                                 Icons.info_outline_rounded,
                                 color: Color(0xFFF5A623),
@@ -627,22 +565,14 @@ class _InformasiPribadiGuruScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
 
-        border: Border.all(
-          color: const Color(0xFFEEEEEE),
-        ),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
       ),
 
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
-  Widget _infoItem(
-    String label,
-    String value, [
-    IconData? icon,
-  ]) {
+  Widget _infoItem(String label, String value, [IconData? icon]) {
     return Padding(
       padding: const EdgeInsets.all(16),
 
@@ -650,13 +580,8 @@ class _InformasiPribadiGuruScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 18,
-              color: const Color(0xFF2E7D32),
-            ),
+            Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
 
             const SizedBox(width: 8),
           ],
@@ -666,7 +591,6 @@ class _InformasiPribadiGuruScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 Text(
                   label,
 

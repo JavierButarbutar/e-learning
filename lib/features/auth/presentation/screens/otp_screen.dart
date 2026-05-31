@@ -13,11 +13,12 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  final List<TextEditingController> _ctls =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _ctls = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
 
-  final List<FocusNode> _nodes =
-      List.generate(4, (_) => FocusNode());
+  final List<FocusNode> _nodes = List.generate(4, (_) => FocusNode());
 
   bool _loading = false;
   int _seconds = 180;
@@ -34,49 +35,45 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (timer) {
-        if (_seconds == 0) {
-          timer.cancel();
-          return;
-        }
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_seconds == 0) {
+        timer.cancel();
+        return;
+      }
 
-        setState(() => _seconds--);
-      },
-    );
+      setState(() => _seconds--);
+    });
   }
 
   void _resend() async {
-  final args =
-      ModalRoute.of(context)?.settings.arguments as Map?;
-  final email = args?['email'];
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    final email = args?['email'];
 
-  if (email == null) return;
+    if (email == null) return;
 
-  try {
-    await ApiService.sendOtp(email: email);
+    try {
+      await ApiService.sendOtp(email: email);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('OTP berhasil dikirim ulang'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } catch (_) {}
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP berhasil dikirim ulang'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (_) {}
 
-  setState(() {
-    _seconds = 180;
-    for (final c in _ctls) {
-      c.clear();
-    }
-  });
+    setState(() {
+      _seconds = 180;
+      for (final c in _ctls) {
+        c.clear();
+      }
+    });
 
-  FocusScope.of(context).requestFocus(_nodes[0]);
+    FocusScope.of(context).requestFocus(_nodes[0]);
 
-  _timer?.cancel();
-  _startTimer();
-}
+    _timer?.cancel();
+    _startTimer();
+  }
 
   String get _timerLabel {
     final m = _seconds ~/ 60;
@@ -86,75 +83,67 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _verify() async {
-  final otp = _ctls.map((e) => e.text).join();
+    final otp = _ctls.map((e) => e.text).join();
 
-  if (otp.length < 4) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Masukkan 4 digit kode OTP'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-    return;
-  }
-
-  final args =
-      ModalRoute.of(context)?.settings.arguments as Map?;
-
-  final email = args?['email'];
-
-  if (email == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Email tidak ditemukan'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  setState(() => _loading = true);
-
-  try {
-    final result = await ApiService.verifyOtp(
-      email: email,
-      otp: otp,
-    );
-
-    if (!mounted) return;
-
-    setState(() => _loading = false);
-
-    if (result['success'] != true) {
+    if (otp.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
+        const SnackBar(
+          content: Text('Masukkan 4 digit kode OTP'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+
+    final email = args?['email'];
+
+    if (email == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email tidak ditemukan'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // ✅ OTP valid → lanjut reset password
-    Navigator.pushNamed(
-      context,
-      '/reset-password',
-      arguments: {
-        'email': email,
-      },
-    );
+    setState(() => _loading = true);
 
-  } catch (e) {
-    setState(() => _loading = false);
+    try {
+      final result = await ApiService.verifyOtp(email: email, otp: otp);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Terjadi kesalahan: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
+      if (!mounted) return;
+
+      setState(() => _loading = false);
+
+      if (result['success'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      Navigator.pushNamed(
+        context,
+        '/reset-password',
+        arguments: {'email': email},
+      );
+    } catch (e) {
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-}
 
   @override
   void dispose() {
@@ -173,23 +162,18 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
 
-    final email =
-        args?['email'] as String? ??
-            '***@smkn1tamanan.sch.id';
+    final email = args?['email'] as String? ?? '***@smkn1tamanan.sch.id';
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER PUTIH
             Container(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Column(
                 children: [
                   Container(
@@ -248,31 +232,23 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
             ),
 
-            // BODY
             Expanded(
               child: Container(
                 color: const Color(0xFFF5F5F5),
                 padding: const EdgeInsets.all(16),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.only(
-                    bottom:
-                        MediaQuery.of(context).viewInsets.bottom,
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
                   ),
                   child: Column(
                     children: [
-                      // CARD OTP
                       Container(
                         width: double.infinity,
-                        padding:
-                            const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
-                                const Color(0xFFEEEEEE),
-                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFEEEEEE)),
                         ),
                         child: Column(
                           children: [
@@ -280,12 +256,9 @@ class _OtpScreenState extends State<OtpScreen> {
                               'Verifikasi OTP',
                               style: TextStyle(
                                 fontSize: 20,
-                                fontWeight:
-                                    FontWeight.w800,
-                                color:
-                                    Color(0xFF1A1A1A),
-                                fontFamily:
-                                    'Poppins',
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1A1A1A),
+                                fontFamily: 'Poppins',
                               ),
                             ),
 
@@ -293,15 +266,11 @@ class _OtpScreenState extends State<OtpScreen> {
 
                             Text(
                               'Kami telah mengirimkan kode verifikasi 4\ndigit ke Email terdaftar Anda.\n$email',
-                              textAlign:
-                                  TextAlign.center,
-                              style:
-                                  const TextStyle(
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 fontSize: 12,
-                                color: Color(
-                                    0xFF777777),
-                                fontFamily:
-                                    'Poppins',
+                                color: Color(0xFF777777),
+                                fontFamily: 'Poppins',
                                 height: 1.6,
                               ),
                             ),
@@ -309,38 +278,21 @@ class _OtpScreenState extends State<OtpScreen> {
                             const SizedBox(height: 20),
 
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment
-                                      .center,
-                              children:
-                                  List.generate(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
                                 4,
                                 (i) => _OtpBox(
-                                  controller:
-                                      _ctls[i],
-                                  focusNode:
-                                      _nodes[i],
-                                  onChanged:
-                                      (val) {
-                                    if (val
-                                            .length ==
-                                        1 &&
-                                        i < 3) {
+                                  controller: _ctls[i],
+                                  focusNode: _nodes[i],
+                                  onChanged: (val) {
+                                    if (val.length == 1 && i < 3) {
                                       FocusScope.of(
-                                              context)
-                                          .requestFocus(
-                                        _nodes[
-                                            i + 1],
-                                      );
-                                    } else if (val
-                                            .isEmpty &&
-                                        i > 0) {
+                                        context,
+                                      ).requestFocus(_nodes[i + 1]);
+                                    } else if (val.isEmpty && i > 0) {
                                       FocusScope.of(
-                                              context)
-                                          .requestFocus(
-                                        _nodes[
-                                            i - 1],
-                                      );
+                                        context,
+                                      ).requestFocus(_nodes[i - 1]);
                                     }
 
                                     setState(() {});
@@ -354,61 +306,38 @@ class _OtpScreenState extends State<OtpScreen> {
                             if (_seconds > 0)
                               Text(
                                 _timerLabel,
-                                style:
-                                    const TextStyle(
+                                style: const TextStyle(
                                   fontSize: 13,
-                                  color: Color(
-                                      0xFF2E7D32),
-                                  fontWeight:
-                                      FontWeight
-                                          .w700,
-                                  fontFamily:
-                                      'Poppins',
+                                  color: Color(0xFF2E7D32),
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Poppins',
                                 ),
                               ),
 
                             const SizedBox(height: 10),
 
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment
-                                      .center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Text(
                                   'Tidak menerima kode? ',
-                                  style:
-                                      TextStyle(
-                                    fontSize:
-                                        12,
-                                    color: Color(
-                                        0xFF666666),
-                                    fontFamily:
-                                        'Poppins',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF666666),
+                                    fontFamily: 'Poppins',
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap:
-                                      _seconds ==
-                                              0
-                                          ? _resend
-                                          : null,
+                                  onTap: _seconds == 0 ? _resend : null,
                                   child: Text(
                                     'Kirim Ulang',
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          12,
-                                      fontFamily:
-                                          'Poppins',
-                                      fontWeight:
-                                          FontWeight
-                                              .w700,
-                                      color: _seconds ==
-                                              0
-                                          ? const Color(
-                                              0xFF2E7D32)
-                                          : const Color(
-                                              0xFF999999),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w700,
+                                      color: _seconds == 0
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFF999999),
                                     ),
                                   ),
                                 ),
@@ -419,10 +348,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
                             AppButton(
                               text: 'Verifikasi',
-                              isLoading:
-                                  _loading,
-                              onPressed:
-                                  _verify,
+                              isLoading: _loading,
+                              onPressed: _verify,
                             ),
                           ],
                         ),
@@ -430,82 +357,52 @@ class _OtpScreenState extends State<OtpScreen> {
 
                       const SizedBox(height: 14),
 
-                      // SECURITY CARD
                       Container(
-                        padding:
-                            const EdgeInsets.all(
-                                14),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color:
-                              const Color(0xFFE8F5E9),
-                          borderRadius:
-                              BorderRadius.circular(
-                                  12),
-                          border: Border.all(
-                            color: const Color(
-                                0xFFC8E6C9),
-                          ),
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFC8E6C9)),
                         ),
                         child: Row(
                           children: [
                             Container(
                               width: 32,
                               height: 32,
-                              decoration:
-                                  const BoxDecoration(
-                                shape:
-                                    BoxShape.circle,
-                                color: Color(
-                                    0xFF2E7D32),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF2E7D32),
                               ),
                               child: const Icon(
-                                Icons
-                                    .lock_outline_rounded,
-                                color:
-                                    Colors.white,
+                                Icons.lock_outline_rounded,
+                                color: Colors.white,
                                 size: 16,
                               ),
                             ),
 
-                            const SizedBox(
-                                width: 12),
+                            const SizedBox(width: 12),
 
                             const Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Sistem Keamanan',
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          12,
-                                      fontWeight:
-                                          FontWeight
-                                              .w700,
-                                      color: Color(
-                                          0xFF1B5E20),
-                                      fontFamily:
-                                          'Poppins',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1B5E20),
+                                      fontFamily: 'Poppins',
                                     ),
                                   ),
-                                  SizedBox(
-                                      height:
-                                          2),
+                                  SizedBox(height: 2),
                                   Text(
                                     'Keamanan data Anda adalah prioritas utama\nkami di SMKN 1 Tamanan',
-                                    style:
-                                        TextStyle(
-                                      fontSize:
-                                          11,
-                                      color: Color(
-                                          0xFF388E3C),
-                                      fontFamily:
-                                          'Poppins',
-                                      height:
-                                          1.5,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF388E3C),
+                                      fontFamily: 'Poppins',
+                                      height: 1.5,
                                     ),
                                   ),
                                 ],
@@ -544,8 +441,7 @@ class _OtpBox extends StatelessWidget {
     return Container(
       width: 58,
       height: 64,
-      margin:
-          const EdgeInsets.symmetric(horizontal: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       child: TextFormField(
         controller: controller,
         focusNode: focusNode,
@@ -553,10 +449,7 @@ class _OtpBox extends StatelessWidget {
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         maxLength: 1,
-        inputFormatters: [
-          FilteringTextInputFormatter
-              .digitsOnly
-        ],
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w800,
@@ -566,42 +459,26 @@ class _OtpBox extends StatelessWidget {
         decoration: InputDecoration(
           counterText: '',
           filled: true,
-          fillColor: filled
-              ? const Color(0xFFE8F5E9)
-              : const Color(0xFFF5F5F5),
+          fillColor: filled ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
           border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: filled
-                  ? const Color(0xFF2E7D32)
-                  : const Color(0xFFE0E0E0),
+              color: filled ? const Color(0xFF2E7D32) : const Color(0xFFE0E0E0),
               width: filled ? 2 : 1,
             ),
           ),
-          enabledBorder:
-              OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: filled
-                  ? const Color(0xFF2E7D32)
-                  : const Color(0xFFE0E0E0),
+              color: filled ? const Color(0xFF2E7D32) : const Color(0xFFE0E0E0),
               width: filled ? 2 : 1,
             ),
           ),
-          focusedBorder:
-              OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
-            borderSide:
-                const BorderSide(
-              color: Color(0xFF2E7D32),
-              width: 2,
-            ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
           ),
-          contentPadding:
-              EdgeInsets.zero,
+          contentPadding: EdgeInsets.zero,
         ),
       ),
     );

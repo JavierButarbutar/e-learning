@@ -1,7 +1,7 @@
-// ── Tipe soal ────────────────────────────────────────────────────────────────
+
 enum TipeSoal { pilihanGanda, esai }
  
-// ── Tipe kuis ────────────────────────────────────────────────────────────────
+
 enum TipeKuis { harianKuis, uts, uas }
  
 extension TipeKuisLabel on TipeKuis {
@@ -17,23 +17,26 @@ extension TipeKuisLabel on TipeKuis {
   }
  
   static TipeKuis fromString(String? value) {
-    switch (value?.toLowerCase()) {
-      case 'uts':
-        return TipeKuis.uts;
-      case 'uas':
-        return TipeKuis.uas;
-      default:
-        return TipeKuis.harianKuis;
-    }
+  switch (value?.toLowerCase()) {
+    case 'uts':
+      return TipeKuis.uts;
+    case 'uas':
+      return TipeKuis.uas;
+    case 'kuis_harian':
+    case 'harian_kuis':
+    case 'harian':
+    default:
+      return TipeKuis.harianKuis;
   }
 }
+}
  
-// ── Model pilihan jawaban ─────────────────────────────────────────────────────
+
 class PilihanModel {
-  final int idPilihan;      // id_pilihan dari API — dikirim saat submit
-  final String label;       // 'A', 'B', 'C', 'D' — generate di client
-  final String? teks;       // isi_pilihan dari API
-  final String? gambarUrl;  // gambar_url dari API (opsional)
+  final int idPilihan;
+  final String label;
+  final String? teks;
+  final String? gambarUrl;
  
   const PilihanModel({
     required this.idPilihan,
@@ -45,18 +48,18 @@ class PilihanModel {
   factory PilihanModel.fromJson(Map<String, dynamic> json, int index) {
     return PilihanModel(
       idPilihan: json['id_pilihan'] ?? 0,
-      label: String.fromCharCode(65 + index), // 0→A, 1→B, 2→C, 3→D
+      label: String.fromCharCode(65 + index),
       teks: json['isi_pilihan'],
-      gambarUrl: json['gambar_url'], // sudah full URL dari backend
+      gambarUrl: json['gambar_url'],
     );
   }
 }
  
-// ── Model soal ────────────────────────────────────────────────────────────────
+
 class SoalModel {
-  final int idSoal;           // id_soal dari API — key untuk submit jawaban
-  final int nomor;            // nomor_urut dari API
-  final String pertanyaan;    // isi_soal dari API
+  final int idSoal;
+  final int nomor;
+  final String pertanyaan;
   final TipeSoal tipe;
   final String? gambarSoalUrl;
   final List<PilihanModel>? pilihan;
@@ -88,19 +91,19 @@ class SoalModel {
     return SoalModel(
       idSoal: json['id_soal'] ?? 0,
       nomor: json['nomor_urut'] ?? 0,
-      pertanyaan: json['pertanyaan'] ?? '',  // ← fix: isi_soal → pertanyaan
+      pertanyaan: json['pertanyaan'] ?? '',
       tipe: tipe,
-      gambarSoalUrl: json['gambar'],         // ← fix: gambar_url → gambar
+      gambarSoalUrl: json['gambar'],
       pilihan: pilihan,
     );
   }
 }
  
-// ── Model hasil submit ────────────────────────────────────────────────────────
+
 class HasilKuisModel {
   final double? nilai;
   final bool tampilkanNilai;
-  final bool menungguPenilaian; // true jika ada soal essay
+  final bool menungguPenilaian;
  
   const HasilKuisModel({
     this.nilai,

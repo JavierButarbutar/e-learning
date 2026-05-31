@@ -2,10 +2,7 @@ import '../../../../core/storage/shared_pref.dart';
 import '../models/user_model.dart';
 import '../models/saved_credentials.dart';
 
-/// Bertanggung jawab untuk semua operasi penyimpanan lokal (SharedPreferences).
-/// Screen dan Provider tidak boleh langsung akses SharedPref.
 class AuthRepository {
-  // ── Simpan session setelah login berhasil ─────────────────────────────────
   static Future<void> saveSession({
     required String token,
     required String role,
@@ -22,9 +19,6 @@ class AuthRepository {
     await SharedPref.setLogin(true);
   }
 
-  // ── Ambil kredensial tersimpan (untuk fitur "Ingatkan Saya") ──────────────
-  /// Mengembalikan [SavedCredentials] jika remember pernah diaktifkan,
-  /// atau null jika tidak ada data tersimpan.
   static Future<SavedCredentials?> getSavedCredentials() async {
     final remember = await SharedPref.getRemember();
     if (!remember) return null;
@@ -33,16 +27,11 @@ class AuthRepository {
     return SavedCredentials(email: email ?? '');
   }
 
-  // ── Hapus session (logout) ────────────────────────────────────────────────
   static Future<void> clearSession() async {
     await SharedPref.setLogin(false);
-    // Tambahkan clear token/user jika SharedPref menyediakan method-nya
-    // await SharedPref.clearToken();
-    // await SharedPref.clearUser();
   }
 }
 
-// ── Model kredensial tersimpan ───────────────────────────────────────────────
 class SavedCredentials {
   final String email;
 

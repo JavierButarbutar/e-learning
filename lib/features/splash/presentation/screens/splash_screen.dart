@@ -34,9 +34,10 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 600),
     );
 
-    _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut),
-    );
+    _logoScale = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut));
 
     _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -45,23 +46,21 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _textCtrl, curve: Curves.easeIn),
-    );
+    _textOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _textCtrl, curve: Curves.easeIn));
 
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _textCtrl, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _textCtrl, curve: Curves.easeOutCubic));
 
     _run();
   }
 
   Future<void> _run() async {
     try {
-      // animasi tetap jalan
       await Future.delayed(const Duration(milliseconds: 400));
       _logoCtrl.forward();
 
@@ -70,7 +69,6 @@ class _SplashScreenState extends State<SplashScreen>
 
       await Future.delayed(const Duration(milliseconds: 2000));
 
-      // 🔥 AMBIL DATA LOGIN
       final isLogin = await SharedPref.getLogin();
       final role = await SharedPref.getRole();
 
@@ -208,10 +206,7 @@ class _SplashScreenState extends State<SplashScreen>
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: color.withOpacity(opacity),
-          width: 40,
-        ),
+        border: Border.all(color: color.withOpacity(opacity), width: 40),
       ),
     );
   }

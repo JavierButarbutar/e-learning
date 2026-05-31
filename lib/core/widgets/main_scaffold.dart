@@ -48,7 +48,9 @@ class _MainScaffoldState extends State<MainScaffold> {
               ),
             ),
             Positioned(
-              left: 16, right: 16, bottom: 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
               child: _FloatingNavBar(
                 currentIndex: _currentIndex,
                 onTap: (i) {
@@ -75,11 +77,32 @@ class _FloatingNavBar extends StatelessWidget {
   const _FloatingNavBar({required this.currentIndex, required this.onTap});
 
   static const _items = [
-    _NavData(icon: Icons.space_dashboard_outlined, activeIcon: Icons.space_dashboard_rounded, label: 'Dashboard'),
-    _NavData(icon: Icons.menu_book_outlined,        activeIcon: Icons.menu_book_rounded,        label: 'Mapel'),
-    _NavData(icon: Icons.qr_code_scanner_rounded,  activeIcon: Icons.qr_code_scanner_rounded,  label: 'Presensi', isCenter: true),
-    _NavData(icon: Icons.history_rounded,           activeIcon: Icons.history_rounded,           label: 'Riwayat'),
-    _NavData(icon: Icons.person_outlined,           activeIcon: Icons.person_rounded,            label: 'Profile'),
+    _NavData(
+      icon: Icons.space_dashboard_outlined,
+      activeIcon: Icons.space_dashboard_rounded,
+      label: 'Beranda',
+    ),
+    _NavData(
+      icon: Icons.menu_book_outlined,
+      activeIcon: Icons.menu_book_rounded,
+      label: 'Mapel',
+    ),
+    _NavData(
+      icon: Icons.qr_code_scanner_rounded,
+      activeIcon: Icons.qr_code_scanner_rounded,
+      label: 'Presensi',
+      isCenter: true,
+    ),
+    _NavData(
+      icon: Icons.history_rounded,
+      activeIcon: Icons.history_rounded,
+      label: 'Riwayat',
+    ),
+    _NavData(
+      icon: Icons.person_outlined,
+      activeIcon: Icons.person_rounded,
+      label: 'Profil',
+    ),
   ];
 
   int _navbarIndex(int screensIndex) {
@@ -89,8 +112,8 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double protrude    = 22;
-    const double pillHeight  = 64;
+    const double protrude = 22;
+    const double pillHeight = 64;
     const double totalHeight = pillHeight + protrude;
 
     final activeNavbar = _navbarIndex(currentIndex);
@@ -102,7 +125,9 @@ class _FloatingNavBar extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         children: [
           Positioned(
-            bottom: 0, left: 0, right: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
               height: pillHeight,
               decoration: BoxDecoration(
@@ -118,7 +143,7 @@ class _FloatingNavBar extends StatelessWidget {
               ),
               child: Row(
                 children: List.generate(_items.length, (i) {
-                  final item   = _items[i];
+                  final item = _items[i];
                   final active = i == activeNavbar;
 
                   if (item.isCenter) {
@@ -132,13 +157,15 @@ class _FloatingNavBar extends StatelessWidget {
                             const SizedBox(height: 26),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: Text('Presensi',
+                              child: Text(
+                                'Presensi',
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF888888),
                                   fontFamily: 'Poppins',
-                                )),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -161,15 +188,19 @@ class _FloatingNavBar extends StatelessWidget {
                                 : const Color(0xFFBBBBBB),
                           ),
                           const SizedBox(height: 3),
-                          Text(item.label,
+                          Text(
+                            item.label,
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                              fontWeight: active
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
                               color: active
                                   ? const Color(0xFF2E7D32)
                                   : const Color(0xFFBBBBBB),
                               fontFamily: 'Poppins',
-                            )),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -178,14 +209,13 @@ class _FloatingNavBar extends StatelessWidget {
               ),
             ),
           ),
-
-          // Tombol presensi menonjol
           Positioned(
             top: 0,
             child: GestureDetector(
               onTap: () => onTap(2),
               child: Container(
-                width: 58, height: 58,
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF2E7D32),
@@ -198,8 +228,11 @@ class _FloatingNavBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.qr_code_scanner_rounded,
-                    color: Colors.white, size: 26),
+                child: const Icon(
+                  Icons.qr_code_scanner_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
               ),
             ),
           ),

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../provider/notifikasi_guru_provider.dart';
 import '../widgets/notifikasi_guru_item.dart';
 
-// Tidak buat provider baru — pakai yang sudah ada dari MainGuruScaffold
 class NotifikasiGuruScreen extends StatelessWidget {
   const NotifikasiGuruScreen({super.key});
 
@@ -52,27 +51,35 @@ class _NotifikasiGuruViewState extends State<_NotifikasiGuruView> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 18, color: Color(0xFF1A1A1A)),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: Color(0xFF1A1A1A),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Notifikasi',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1A1A),
-                fontFamily: 'Poppins')),
+        title: const Text(
+          'Notifikasi',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1A1A1A),
+            fontFamily: 'Poppins',
+          ),
+        ),
         centerTitle: false,
         actions: [
           TextButton(
-            onPressed: () =>
-                context.read<NotifikasiGuruProvider>().bacaSemua(),
-            child: const Text('Tandai dibaca',
-                style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF2E7D32),
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600)),
+            onPressed: () => context.read<NotifikasiGuruProvider>().bacaSemua(),
+            child: const Text(
+              'Tandai dibaca',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF2E7D32),
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -84,15 +91,21 @@ class _NotifikasiGuruViewState extends State<_NotifikasiGuruView> {
 
           if (prov.error != null && prov.list.isEmpty) {
             return Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 40),
-                const SizedBox(height: 8),
-                Text(prov.error!,
-                    style: const TextStyle(fontFamily: 'Poppins')),
-                TextButton(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    prov.error!,
+                    style: const TextStyle(fontFamily: 'Poppins'),
+                  ),
+                  TextButton(
                     onPressed: () => prov.loadNotifikasi(refresh: true),
-                    child: const Text('Coba Lagi')),
-              ]),
+                    child: const Text('Coba Lagi'),
+                  ),
+                ],
+              ),
             );
           }
 
@@ -101,11 +114,16 @@ class _NotifikasiGuruViewState extends State<_NotifikasiGuruView> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.notifications_none_outlined,
-                      size: 48, color: Colors.grey),
+                  Icon(
+                    Icons.notifications_none_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 12),
-                  Text('Belum ada notifikasi jadwal',
-                      style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
+                  Text(
+                    'Belum ada notifikasi jadwal',
+                    style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
+                  ),
                 ],
               ),
             );
@@ -124,7 +142,8 @@ class _NotifikasiGuruViewState extends State<_NotifikasiGuruView> {
                     child: Padding(
                       padding: EdgeInsets.all(16),
                       child: CircularProgressIndicator(),
-                    ));
+                    ),
+                  );
                 }
                 final notif = prov.list[i];
                 return NotifikasiGuruItem(

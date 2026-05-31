@@ -35,7 +35,9 @@ class _MainGuruScaffoldState extends State<MainGuruScaffold> {
               ),
             ),
             Positioned(
-              left: 40, right: 40, bottom: 16,
+              left: 40,
+              right: 40,
+              bottom: 16,
               child: _GuruNavBar(
                 currentIndex: _currentIndex,
                 onTap: (i) => setState(() => _currentIndex = i),
@@ -64,7 +66,9 @@ class _GuruNavBar extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.12),
-            blurRadius: 20, offset: const Offset(0, 6)),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Row(
@@ -96,8 +100,11 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NavItem({
-    required this.icon, required this.activeIcon,
-    required this.label, required this.active, required this.onTap,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.active,
+    required this.onTap,
   });
 
   @override
@@ -106,23 +113,28 @@ class _NavItem extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(active ? activeIcon : icon,
-            size: 24,
-            color: active
-                ? const Color(0xFF2E7D32)
-                : const Color(0xFFBBBBBB)),
-          const SizedBox(height: 4),
-          Text(label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-              color: active
-                  ? const Color(0xFF2E7D32)
-                  : const Color(0xFFBBBBBB),
-              fontFamily: 'Poppins',
-            )),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              active ? activeIcon : icon,
+              size: 24,
+              color: active ? const Color(0xFF2E7D32) : const Color(0xFFBBBBBB),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                color: active
+                    ? const Color(0xFF2E7D32)
+                    : const Color(0xFFBBBBBB),
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

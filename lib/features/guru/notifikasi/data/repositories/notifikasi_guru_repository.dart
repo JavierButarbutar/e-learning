@@ -1,5 +1,5 @@
-import 'dart:async';                        // untuk TimeoutException
-import 'package:flutter/foundation.dart';   // untuk debugPrint
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/notifikasi_guru_model.dart';
@@ -7,7 +7,7 @@ import '../../../../../core/storage/shared_pref.dart';
 
 class NotifikasiGuruRepository {
   static const String _baseUrl =
-      'https://loan-eco-chen-speech.trycloudflare.com/api';
+      'https://authorization-function-blend-highlight.trycloudflare.com/api';
 
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {
     try {
@@ -29,7 +29,6 @@ class NotifikasiGuruRepository {
         final List list = body['data'] ?? [];
 
         return {
-          // Filter hanya tipe jadwal_guru
           'data': list
               .map((e) => NotifikasiGuruModel.fromJson(e))
               .where((n) => n.tipe == 'jadwal')
@@ -50,10 +49,7 @@ class NotifikasiGuruRepository {
     final token = await SharedPref.getToken();
     await http.post(
       Uri.parse('$_baseUrl/notifikasi/$id/baca'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      },
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
   }
 
@@ -61,41 +57,40 @@ class NotifikasiGuruRepository {
     final token = await SharedPref.getToken();
     await http.post(
       Uri.parse('$_baseUrl/notifikasi/baca-semua'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      },
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
   }
 
   static Future<void> updateFcmToken(String fcmToken) async {
-  final token = await SharedPref.getToken();
-  if (token == null) return;
+    final token = await SharedPref.getToken();
+    if (token == null) return;
 
-  debugPrint("KIRIM FCM TOKEN: $fcmToken"); 
+    debugPrint("KIRIM FCM TOKEN: $fcmToken");
 
-  try {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/notifikasi/update-token'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'fcm_token': fcmToken}),
-    ).timeout(const Duration(seconds: 8));
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/notifikasi/update-token'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'fcm_token': fcmToken}),
+          )
+          .timeout(const Duration(seconds: 8));
 
-     debugPrint("RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}");
+      debugPrint(
+        "RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}",
+      );
 
-    // Optional: log kalau gagal tapi jangan rethrow
-    // FCM token update bukan operasi kritis — gagal pun app tetap jalan
-    if (response.statusCode != 200) {
-      debugPrint("FCM token update failed: ${response.statusCode}");
+      if (response.statusCode != 200) {
+        debugPrint("FCM token update failed: ${response.statusCode}");
+      }
+    } on TimeoutException {
+      debugPrint("FCM token update timeout");
+    } catch (e) {
+      debugPrint("FCM token update error: $e");
     }
-  } on TimeoutException {
-    debugPrint("FCM token update timeout");
-  } catch (e) {
-    debugPrint("FCM token update error: $e");
   }
-}
 }

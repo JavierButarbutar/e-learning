@@ -1,5 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';   // untuk debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../repositories/notifikasi_repository.dart';
 
@@ -11,8 +11,9 @@ class NotifikasiService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // ── Setup local notifications ────────────────────────────────────────
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -23,9 +24,10 @@ class NotifikasiService {
       const InitializationSettings(android: androidSettings, iOS: iosSettings),
     );
 
-    // Buat channel Android
     await _localNotif
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(
           const AndroidNotificationChannel(
             'elearning_channel',
@@ -35,7 +37,6 @@ class NotifikasiService {
           ),
         );
 
-    // Minta izin (iOS & Android 13+)
     await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
@@ -45,17 +46,15 @@ class NotifikasiService {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     debugPrint("FCM TOKEN: $fcmToken");
     if (fcmToken != null) {
-      await NotifikasiRepository.updateFcmToken(fcmToken); // ← ini yang kurang
+      await NotifikasiRepository.updateFcmToken(fcmToken);
     }
 
-    // Handle kalau Firebase rotate token (token refresh otomatis)
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       NotifikasiRepository.updateFcmToken(newToken).catchError((e) {
         print("FCM token refresh failed: $e");
       });
     });
 
-    // Foreground message → tampilkan via local notification
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notif = message.notification;
       if (notif == null) return;

@@ -9,8 +9,6 @@ class AppTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool obscureText;
   final String? Function(String?)? validator;
-
-  // 🔥 TAMBAHAN
   final String? errorText;
 
   const AppTextField({
@@ -23,7 +21,7 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.obscureText = false,
     this.validator,
-    this.errorText, // 🔥 INI WAJIB
+    this.errorText,
   });
 
   @override
@@ -31,7 +29,6 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // LABEL
         Text(
           label,
           style: const TextStyle(
@@ -42,8 +39,6 @@ class AppTextField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-
-        // TEXTFIELD
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -52,11 +47,8 @@ class AppTextField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
 
-            prefixIcon:
-                prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
             suffixIcon: suffixIcon,
-
-            // 🔥 ERROR MASUK SINI
             errorText: errorText,
 
             contentPadding: const EdgeInsets.symmetric(

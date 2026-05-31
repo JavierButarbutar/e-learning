@@ -1,6 +1,6 @@
 import 'soal_model.dart';
 
-// ── Model kuis ────────────────────────────────────────────────────────────────
+
 class KuisModel {
   final int id;
   final String judulKuis;
@@ -9,7 +9,13 @@ class KuisModel {
   final TipeKuis tipeKuis;
   final int durasiMenit;
   final bool tampilkanNilai;
-  final List<SoalModel> soalList; // diisi setelah getSoal()
+  final List<SoalModel> soalList;
+  final int jumlahSoal;
+
+
+  final bool? sudahDikerjakan;
+  final double? nilaiAkhir;
+  final String? statusPengerjaan;
 
   const KuisModel({
     required this.id,
@@ -20,22 +26,54 @@ class KuisModel {
     required this.durasiMenit,
     this.tampilkanNilai = false,
     this.soalList = const [],
+    this.jumlahSoal = 0,
+    this.sudahDikerjakan,
+    this.nilaiAkhir,
+    this.statusPengerjaan,
   });
 
-  /// Parse dari response show() — belum ada soal
+
   factory KuisModel.fromJson(Map<String, dynamic> json) {
+    final statusPengerjaan = json['status_pengerjaan'] as String?;
+    final hasil = json['hasil'] as Map<String, dynamic>?;
+
+    double? nilaiAkhir;
+    final rawNilai = json['nilai_akhir'] ?? hasil?['nilai'];
+    if (rawNilai != null) {
+      nilaiAkhir = rawNilai is num
+          ? rawNilai.toDouble()
+          : double.tryParse(rawNilai.toString());
+    }
+
+    final tampilkanNilai = json['tampilkan_nilai'] as bool? ?? false;
+    final sudah = statusPengerjaan == 'selesai' || statusPengerjaan == 'menunggu';
+
+
+    final tipeRaw = (json['tipe_kuis'] ?? json['tipe']) as String?;
+
+
+
+    final kelasObj = json['kelas'];
+    final namaKelas = (kelasObj is Map ? kelasObj['nama_kelas'] : null)
+        ?? json['nama_kelas']
+        ?? '-';
+
     return KuisModel(
       id: json['id_kuis'] ?? 0,
       judulKuis: json['judul_kuis'] ?? '-',
-      namaMapel: json['mapel']?['nama_mapel'] ?? '-',
-      namaKelas: json['kelas']?['nama_kelas'] ?? '-',
-      tipeKuis: TipeKuisLabel.fromString(json['tipe_kuis']),
+      namaMapel: json['mapel']?['nama_mapel'] ?? json['nama_mapel'] ?? '-',
+      namaKelas: namaKelas,
+      tipeKuis: TipeKuisLabel.fromString(tipeRaw),
       durasiMenit: json['durasi_menit'] ?? 60,
-      tampilkanNilai: json['tampilkan_nilai'] ?? false,
+      jumlahSoal: json['jumlah_soal'] as int? ?? 0,
+      tampilkanNilai: tampilkanNilai,
+      sudahDikerjakan: sudah,
+      nilaiAkhir: nilaiAkhir,
+      statusPengerjaan: statusPengerjaan,
     );
   }
 
-  /// Buat salinan dengan soal yang sudah diisi
+
   KuisModel copyWithSoal(List<SoalModel> soal) {
     return KuisModel(
       id: id,
@@ -46,11 +84,37 @@ class KuisModel {
       durasiMenit: durasiMenit,
       tampilkanNilai: tampilkanNilai,
       soalList: soal,
+      jumlahSoal: soal.length > 0 ? soal.length : jumlahSoal,
+      sudahDikerjakan: sudahDikerjakan,
+      nilaiAkhir: nilaiAkhir,
+      statusPengerjaan: statusPengerjaan,
+    );
+  }
+
+
+  KuisModel copyWithHasil({
+    required bool sudahDikerjakan,
+    double? nilaiAkhir,
+    String? statusPengerjaan,
+  }) {
+    return KuisModel(
+      id: id,
+      judulKuis: judulKuis,
+      namaMapel: namaMapel,
+      namaKelas: namaKelas,
+      tipeKuis: tipeKuis,
+      durasiMenit: durasiMenit,
+      tampilkanNilai: tampilkanNilai,
+      soalList: soalList,
+      jumlahSoal: jumlahSoal,
+      sudahDikerjakan: sudahDikerjakan,
+      nilaiAkhir: nilaiAkhir,
+      statusPengerjaan: statusPengerjaan,
     );
   }
 }
 
-// ── Model sesi kuis (response dari start()) ───────────────────────────────────
+
 class SesiKuisModel {
   final int idHasil;
   final DateTime waktuMulai;
@@ -70,7 +134,7 @@ class SesiKuisModel {
     );
   }
 
-  /// Sisa detik dari sekarang sampai batas waktu
+
   int get sisaDetik {
     final diff = batasWaktu.difference(DateTime.now()).inSeconds;
     return diff < 0 ? 0 : diff;
