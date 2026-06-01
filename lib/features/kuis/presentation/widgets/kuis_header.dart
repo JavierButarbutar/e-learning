@@ -1,4 +1,4 @@
-// ── kuis_header.dart ──────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/kuis_provider.dart';
@@ -50,7 +50,7 @@ class KuisHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Timer
+
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),

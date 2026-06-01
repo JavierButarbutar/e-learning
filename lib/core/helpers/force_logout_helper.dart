@@ -1,5 +1,3 @@
-// lib/core/helpers/force_logout_helper.dart
-
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
 

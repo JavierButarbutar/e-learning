@@ -1,6 +1,3 @@
-// Cukup re-export atau copy dari siswa
-// lib/guru/notifikasi/data/models/notifikasi_guru_model.dart
-
 class NotifikasiGuruModel {
   final int idNotifikasi;
   final String tipe;
@@ -26,7 +23,9 @@ class NotifikasiGuruModel {
       tipe: json['tipe'] ?? '',
       judul: json['judul'] ?? '',
       isi: json['isi'] ?? '',
-      data: json['data'] is Map ? Map<String, dynamic>.from(json['data']) : null,
+      data: json['data'] is Map
+          ? Map<String, dynamic>.from(json['data'])
+          : null,
       isRead: json['is_read'] == true || json['is_read'] == 1,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])

@@ -23,7 +23,9 @@ class NotifikasiModel {
       tipe: json['tipe'] ?? '',
       judul: json['judul'] ?? '',
       isi: json['isi'] ?? '',
-      data: json['data'] is Map ? Map<String, dynamic>.from(json['data']) : null,
+      data: json['data'] is Map
+          ? Map<String, dynamic>.from(json['data'])
+          : null,
       isRead: json['is_read'] == true || json['is_read'] == 1,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])

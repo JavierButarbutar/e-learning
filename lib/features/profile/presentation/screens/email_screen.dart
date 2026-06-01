@@ -41,7 +41,6 @@ class _EmailScreenState extends State<EmailScreen> {
     super.dispose();
   }
 
-  // ================= SIMPAN EMAIL (UPDATED LOGIC) =================
   void _simpan() async {
     if (_emailBaruCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +86,6 @@ class _EmailScreenState extends State<EmailScreen> {
         return;
       }
 
-      // UPDATE LOCAL STORAGE
       final user = await SharedPref.getUser();
 
       user?['email'] = _emailBaruCtrl.text.trim();
@@ -131,8 +129,6 @@ class _EmailScreenState extends State<EmailScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: Column(
         children: [
-
-          // ================= APPBAR (TETAP) =================
           Container(
             color: const Color(0xFF2E7D32),
             padding: EdgeInsets.fromLTRB(
@@ -179,8 +175,6 @@ class _EmailScreenState extends State<EmailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // ================= EMAIL CURRENT =================
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
@@ -194,8 +188,11 @@ class _EmailScreenState extends State<EmailScreen> {
                       children: [
                         Row(
                           children: const [
-                            Icon(Icons.verified_outlined,
-                                color: Color(0xFF2E7D32), size: 16),
+                            Icon(
+                              Icons.verified_outlined,
+                              color: Color(0xFF2E7D32),
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               'Alamat Email',
@@ -233,13 +230,11 @@ class _EmailScreenState extends State<EmailScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ================= BUTTON =================
                   if (!_showGantiForm)
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            setState(() => _showGantiForm = true),
+                        onPressed: () => setState(() => _showGantiForm = true),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         label: const Text(
                           'Ganti Email',
@@ -251,9 +246,7 @@ class _EmailScreenState extends State<EmailScreen> {
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF2E7D32),
-                          side: const BorderSide(
-                            color: Color(0xFF2E7D32),
-                          ),
+                          side: const BorderSide(color: Color(0xFF2E7D32)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -262,7 +255,6 @@ class _EmailScreenState extends State<EmailScreen> {
                       ),
                     ),
 
-                  // ================= FORM =================
                   if (_showGantiForm) ...[
                     Container(
                       width: double.infinity,
@@ -350,28 +342,44 @@ class _FieldLabel extends StatelessWidget {
   final String label;
   const _FieldLabel({required this.label});
   @override
-  Widget build(BuildContext context) => Text(label,
-    style: const TextStyle(fontSize: 12, color: Color(0xFF888888),
-        fontFamily: 'Poppins', fontWeight: FontWeight.w600));
+  Widget build(BuildContext context) => Text(
+    label,
+    style: const TextStyle(
+      fontSize: 12,
+      color: Color(0xFF888888),
+      fontFamily: 'Poppins',
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }
 
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType keyboardType;
-  const _InputField({required this.controller, required this.hint,
-      this.keyboardType = TextInputType.text});
+  const _InputField({
+    required this.controller,
+    required this.hint,
+    this.keyboardType = TextInputType.text,
+  });
 
   @override
   Widget build(BuildContext context) => TextField(
     controller: controller,
     keyboardType: keyboardType,
-    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
-        color: Color(0xFF1A1A1A), fontFamily: 'Poppins'),
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF1A1A1A),
+      fontFamily: 'Poppins',
+    ),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFFBBBBBB),
-          fontFamily: 'Poppins', fontSize: 14),
+      hintStyle: const TextStyle(
+        color: Color(0xFFBBBBBB),
+        fontFamily: 'Poppins',
+        fontSize: 14,
+      ),
       filled: true,
       fillColor: const Color(0xFFF9F9F9),
       border: OutlineInputBorder(

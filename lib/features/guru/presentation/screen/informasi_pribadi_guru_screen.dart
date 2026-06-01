@@ -11,7 +11,6 @@ class InformasiPribadiGuruScreen extends StatefulWidget {
 
 class _InformasiPribadiGuruScreenState
     extends State<InformasiPribadiGuruScreen> {
-
   Map<String, dynamic>? user;
   bool isLoading = true;
 
@@ -37,7 +36,6 @@ class _InformasiPribadiGuruScreenState
 
   @override
   Widget build(BuildContext context) {
-
     final name = user?['name'] ?? '-';
     final nip = user?['nip'] ?? '-';
     final mapel = user?['nama_mapel'] ?? '-';
@@ -50,14 +48,9 @@ class _InformasiPribadiGuruScreenState
       backgroundColor: const Color(0xFFF5F5F5),
 
       body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-
+          ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-
-                // ================= HEADER =================
                 Container(
                   color: const Color(0xFF2E7D32),
 
@@ -70,7 +63,6 @@ class _InformasiPribadiGuruScreenState
 
                   child: Row(
                     children: [
-
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
 
@@ -106,15 +98,12 @@ class _InformasiPribadiGuruScreenState
                   ),
                 ),
 
-                // ================= CONTENT =================
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
 
                     child: Column(
                       children: [
-
-                        // FOTO
                         Container(
                           width: 90,
                           height: 90,
@@ -143,7 +132,6 @@ class _InformasiPribadiGuruScreenState
 
                         const SizedBox(height: 14),
 
-                        // NAMA
                         Text(
                           name,
                           style: const TextStyle(
@@ -155,7 +143,6 @@ class _InformasiPribadiGuruScreenState
 
                         const SizedBox(height: 4),
 
-                        // NIP
                         Text(
                           'NIP: $nip',
                           style: const TextStyle(
@@ -167,29 +154,14 @@ class _InformasiPribadiGuruScreenState
 
                         const SizedBox(height: 24),
 
-                        // CARD INFO
                         _infoCard([
+                          _infoItem('Nama Lengkap', name),
 
-                          _infoItem(
-                            'Nama Lengkap',
-                            name,
-                          ),
+                          _infoItem('NIP', nip),
 
-                          _infoItem(
-                            'NIP',
-                            nip,
-                          ),
+                          _infoItem('Mata Pelajaran', mapel),
 
-                          _infoItem(
-                            'Mata Pelajaran',
-                            mapel,
-                          ),
-
-                          _infoItem(
-                            'Email',
-                            email,
-                            Icons.email_outlined,
-                          ),
+                          _infoItem('Email', email, Icons.email_outlined),
 
                           _infoItem(
                             'Nomor Telepon',
@@ -206,21 +178,17 @@ class _InformasiPribadiGuruScreenState
 
                         const SizedBox(height: 16),
 
-                        // INFO
                         Container(
                           padding: const EdgeInsets.all(14),
 
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF8E1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFFFE082),
-                            ),
+                            border: Border.all(color: const Color(0xFFFFE082)),
                           ),
 
                           child: const Row(
                             children: [
-
                               Icon(
                                 Icons.info_outline_rounded,
                                 color: Color(0xFFF5A623),
@@ -252,7 +220,6 @@ class _InformasiPribadiGuruScreenState
     );
   }
 
-  // ================= DEFAULT AVATAR =================
   Widget _defaultAvatar() {
     return Container(
       color: Colors.grey.shade200,
@@ -265,7 +232,6 @@ class _InformasiPribadiGuruScreenState
     );
   }
 
-  // ================= CARD =================
   Widget _infoCard(List<Widget> children) {
     return Container(
       width: double.infinity,
@@ -273,23 +239,14 @@ class _InformasiPribadiGuruScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFEEEEEE),
-        ),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
       ),
 
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
-  // ================= ITEM =================
-  Widget _infoItem(
-    String label,
-    String value, [
-    IconData? icon,
-  ]) {
+  Widget _infoItem(String label, String value, [IconData? icon]) {
     return Padding(
       padding: const EdgeInsets.all(16),
 
@@ -297,13 +254,8 @@ class _InformasiPribadiGuruScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 18,
-              color: const Color(0xFF2E7D32),
-            ),
+            Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
 
             const SizedBox(width: 8),
           ],
@@ -313,7 +265,6 @@ class _InformasiPribadiGuruScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 Text(
                   label,
                   style: const TextStyle(

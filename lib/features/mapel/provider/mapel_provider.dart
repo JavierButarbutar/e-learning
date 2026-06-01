@@ -15,7 +15,6 @@ class MapelProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // ── Ambil daftar mapel ────────────────────────────────────────────────────
   Future<void> getMapel() async {
     _setLoading(true);
     try {
@@ -27,7 +26,6 @@ class MapelProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // ── Ambil materi + kuis berdasarkan id mapel ──────────────────────────────
   Future<void> getMateri(String idMapel) async {
     _setLoading(true);
     try {
@@ -44,16 +42,14 @@ class MapelProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Di mapel_provider.dart
-
   final Map<String, List<MateriItem>> _materiCache = {};
   Map<String, List<MateriItem>> get materiCache => _materiCache;
 
   Future<void> fetchAllMateri() async {
-    if (_mapel.isEmpty) await getMapel(); // pastikan mapel sudah di-load
+    if (_mapel.isEmpty) await getMapel();
 
     final futures = _mapel.map((m) async {
-      if (_materiCache.containsKey(m.id)) return; // skip kalau sudah di-cache
+      if (_materiCache.containsKey(m.id)) return;
       try {
         final result = await _repo.getMateri(m.id);
         _materiCache[m.id] = result;
@@ -63,4 +59,4 @@ class MapelProvider extends ChangeNotifier {
     await Future.wait(futures);
     notifyListeners();
   }
-  }
+}

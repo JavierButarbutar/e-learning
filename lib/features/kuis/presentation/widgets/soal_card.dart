@@ -1,4 +1,4 @@
-// ── soal_card.dart ────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import '../../data/models/soal_model.dart';
 

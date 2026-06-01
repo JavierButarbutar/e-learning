@@ -25,11 +25,11 @@ class DetailMateriScreen extends StatefulWidget {
 
 class _DetailMateriScreenState extends State<DetailMateriScreen> {
   bool _tugasDikumpulkan = false;
-  bool _isCompleted      = false;
+  bool _isCompleted = false;
 
   final PdfViewerController _pdfController = PdfViewerController();
-  int  _currentPage  = 1;
-  int  _totalPages   = 1;
+  int _currentPage = 1;
+  int _totalPages = 1;
   bool _isLoadingPdf = true;
 
   String get _prefKey => 'materi_selesai_${widget.item.id}';
@@ -44,20 +44,21 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
   }
 
   Future<void> _loadProgress() async {
-    final prefs   = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final selesai = prefs.getBool(_prefKey) ?? false;
 
-    final existing = ProgressStore.aktivitas
-        .where((e) => e.materi == widget.item.judul);
+    final existing = ProgressStore.aktivitas.where(
+      (e) => e.materi == widget.item.judul,
+    );
 
     if (existing.isNotEmpty) {
       if (selesai) existing.first.isCompleted = true;
     } else {
       ProgressStore.aktivitas.add(
         ProgressMateri(
-          mapel:       widget.namaMapel,
-          materi:      widget.item.judul,
-          item:        widget.item,
+          mapel: widget.namaMapel,
+          materi: widget.item.judul,
+          item: widget.item,
           isCompleted: selesai,
         ),
       );
@@ -70,8 +71,9 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, true);
 
-    final index = ProgressStore.aktivitas
-        .indexWhere((e) => e.materi == widget.item.judul);
+    final index = ProgressStore.aktivitas.indexWhere(
+      (e) => e.materi == widget.item.judul,
+    );
     if (index != -1) ProgressStore.aktivitas[index].isCompleted = true;
 
     if (!mounted) return;
@@ -117,9 +119,8 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final item     = widget.item;
-    // Kuis tidak akan pernah masuk ke sini karena navigasi sudah dipisah
-    // di _MateriTile. hasTugas saja yang perlu dicek.
+    final item = widget.item;
+
     final hasTugas = item.type == MateriType.tugas;
 
     final bolehSelesai = _sudahHalamanTerakhir && !_isCompleted;
@@ -135,8 +136,6 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // Judul materi
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
                     child: Text(
@@ -151,7 +150,6 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                     ),
                   ),
 
-                  // Info file
                   if (item.namaFile != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -162,22 +160,27 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                           Expanded(
                             child: Text(
                               item.namaFile!,
-                              style: const TextStyle(fontSize: 12,
-                                  color: Color(0xFF888888),
-                                  fontFamily: 'Poppins'),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF888888),
+                                fontFamily: 'Poppins',
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (item.ukuranFile != null)
-                            Text(item.ukuranFile!,
-                                style: const TextStyle(fontSize: 11,
-                                    color: Color(0xFFBBBBBB),
-                                    fontFamily: 'Poppins')),
+                            Text(
+                              item.ukuranFile!,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFFBBBBBB),
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
                         ],
                       ),
                     ),
 
-                  // PDF Viewer
                   _PdfViewer(
                     item: item,
                     controller: _pdfController,
@@ -186,7 +189,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                     isLoading: _isLoadingPdf,
                     onDocumentLoaded: (details) {
                       setState(() {
-                        _totalPages   = details.document.pages.count;
+                        _totalPages = details.document.pages.count;
                         _isLoadingPdf = false;
                       });
                     },
@@ -203,19 +206,22 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Tombol Selesai Dibaca
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [
-                        // Hint jika PDF belum selesai
-                        if (!_isCompleted && !_sudahHalamanTerakhir && !_isLoadingPdf)
+                        if (!_isCompleted &&
+                            !_sudahHalamanTerakhir &&
+                            !_isLoadingPdf)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                const Icon(Icons.info_outline_rounded,
-                                    size: 13, color: Color(0xFF888888)),
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 13,
+                                  color: Color(0xFF888888),
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -236,17 +242,21 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: bolehSelesai ? _selesaikanMateri : null,
-                            icon: Icon(_isCompleted
-                                ? Icons.check_circle_rounded
-                                : Icons.check_circle_outline_rounded,
-                                size: 18),
+                            icon: Icon(
+                              _isCompleted
+                                  ? Icons.check_circle_rounded
+                                  : Icons.check_circle_outline_rounded,
+                              size: 18,
+                            ),
                             label: Text(
                               _isCompleted
                                   ? 'Materi Sudah Selesai'
                                   : 'Selesai Dibaca',
-                              style: const TextStyle(fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'Poppins'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Poppins',
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isCompleted
@@ -260,7 +270,8 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
                           ),
                         ),
@@ -268,7 +279,6 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
                     ),
                   ),
 
-                  // Card Tugas (jika ada)
                   if (hasTugas) ...[
                     const SizedBox(height: 12),
                     _TugasCard(
@@ -293,27 +303,41 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
     return Container(
       color: const Color(0xFF2E7D32),
       padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + 10, 16, 14),
+        16,
+        MediaQuery.of(context).padding.top + 10,
+        16,
+        14,
+      ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 34, height: 34,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2)),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white, size: 16),
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.2),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(widget.namaMapel,
-                style: const TextStyle(fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white, fontFamily: 'Poppins'),
-                overflow: TextOverflow.ellipsis),
+            child: Text(
+              widget.namaMapel,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontFamily: 'Poppins',
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -322,7 +346,7 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
 
   Widget _fileIcon(String? tipe) {
     IconData icon;
-    Color    color;
+    Color color;
     switch (tipe) {
       case 'word':
         icon = Icons.description_outlined;
@@ -340,17 +364,14 @@ class _DetailMateriScreenState extends State<DetailMateriScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// PDF Viewer
-// ─────────────────────────────────────────────────────────────
 class _PdfViewer extends StatelessWidget {
   final MateriItem item;
   final PdfViewerController controller;
-  final int  currentPage;
-  final int  totalPages;
+  final int currentPage;
+  final int totalPages;
   final bool isLoading;
   final Function(PdfDocumentLoadedDetails) onDocumentLoaded;
-  final Function(PdfPageChangedDetails)    onPageChanged;
+  final Function(PdfPageChangedDetails) onPageChanged;
   final VoidCallback? onDownload;
 
   const _PdfViewer({
@@ -375,74 +396,108 @@ class _PdfViewer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFEEEEEE)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06),
-              blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
         children: [
-          // Header PDF
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: Color(0xFFF9F9F9),
               borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16)),
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
               border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                      color: const Color(0xFFFFEBEE),
-                      borderRadius: BorderRadius.circular(6)),
-                  child: const Row(children: [
-                    Icon(Icons.picture_as_pdf_outlined,
-                        size: 14, color: Color(0xFFE53935)),
-                    SizedBox(width: 4),
-                    Text('PDF', style: TextStyle(fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFE53935), fontFamily: 'Poppins')),
-                  ]),
+                    color: const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.picture_as_pdf_outlined,
+                        size: 14,
+                        color: Color(0xFFE53935),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'PDF',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFE53935),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(item.namaFile ?? 'Materi.pdf',
-                      style: const TextStyle(fontSize: 12,
-                          color: Color(0xFF555555), fontFamily: 'Poppins'),
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    item.namaFile ?? 'Materi.pdf',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF555555),
+                      fontFamily: 'Poppins',
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                Text('Hal $currentPage / $totalPages',
-                    style: const TextStyle(fontSize: 11,
-                        color: Color(0xFF888888), fontFamily: 'Poppins')),
+                Text(
+                  'Hal $currentPage / $totalPages',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF888888),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
               ],
             ),
           ),
 
-          // PDF content
           SizedBox(
             height: 600,
-            child: Stack(children: [
-              if (pdfUrl.isNotEmpty)
-                SfPdfViewer.network(pdfUrl,
+            child: Stack(
+              children: [
+                if (pdfUrl.isNotEmpty)
+                  SfPdfViewer.network(
+                    pdfUrl,
                     controller: controller,
                     onDocumentLoaded: onDocumentLoaded,
-                    onPageChanged: onPageChanged)
-              else
-                const Center(
-                  child: Text('PDF tidak tersedia',
-                      style: TextStyle(fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600)),
-                ),
-              if (isLoading)
-                Container(
-                  color: Colors.white.withOpacity(0.8),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-            ]),
+                    onPageChanged: onPageChanged,
+                  )
+                else
+                  const Center(
+                    child: Text(
+                      'PDF tidak tersedia',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                if (isLoading)
+                  Container(
+                    color: Colors.white.withOpacity(0.8),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+              ],
+            ),
           ),
 
           Container(
@@ -450,15 +505,18 @@ class _PdfViewer extends StatelessWidget {
             decoration: const BoxDecoration(
               color: Color(0xFFF9F9F9),
               borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16)),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
               border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () { if (currentPage > 1) controller.previousPage(); },
+                  onTap: () {
+                    if (currentPage > 1) controller.previousPage();
+                  },
                   child: _NavBtn(
                     label: 'Sebelumnya',
                     icon: Icons.chevron_left_rounded,
@@ -468,8 +526,10 @@ class _PdfViewer extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDownload,
-                  icon: const Icon(Icons.download_rounded,
-                      color: Color(0xFF2E7D32)),
+                  icon: const Icon(
+                    Icons.download_rounded,
+                    color: Color(0xFF2E7D32),
+                  ),
                   tooltip: 'Download PDF',
                 ),
                 GestureDetector(
@@ -493,10 +553,10 @@ class _PdfViewer extends StatelessWidget {
 }
 
 class _NavBtn extends StatelessWidget {
-  final String   label;
+  final String label;
   final IconData icon;
-  final bool     iconLeft;
-  final bool     active;
+  final bool iconLeft;
+  final bool active;
 
   const _NavBtn({
     required this.label,
@@ -508,31 +568,34 @@ class _NavBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active ? Colors.white : const Color(0xFFBBBBBB);
-    final bg    = active ? const Color(0xFF2E7D32) : const Color(0xFFEEEEEE);
+    final bg = active ? const Color(0xFF2E7D32) : const Color(0xFFEEEEEE);
     final iconW = Icon(icon, size: 18, color: color);
-    final text  = Text(label,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins', color: color));
+    final text = Text(
+      label,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        fontFamily: 'Poppins',
+        color: color,
+      ),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: bg,
-          borderRadius: BorderRadius.circular(10)),
-      child: Row(children: iconLeft
-          ? [iconW, text]
-          : [text, iconW]),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(children: iconLeft ? [iconW, text] : [text, iconW]),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Tugas Card
-// ─────────────────────────────────────────────────────────────
 class _TugasCard extends StatelessWidget {
-  final MateriItem   item;
-  final bool         sudahDikumpulkan;
+  final MateriItem item;
+  final bool sudahDikumpulkan;
   final VoidCallback onUpload;
-  final String       namaMapel;
+  final String namaMapel;
 
   const _TugasCard({
     required this.item,
@@ -551,11 +614,18 @@ class _TugasCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32),
-                borderRadius: BorderRadius.circular(8)),
-            child: const Text('Tugas',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                    color: Colors.white, fontFamily: 'Poppins')),
+              color: const Color(0xFF2E7D32),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Tugas',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                fontFamily: 'Poppins',
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           Container(
@@ -572,37 +642,55 @@ class _TugasCard extends StatelessWidget {
                 if (item.deadlineTugas != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(children: [
-                      const Icon(Icons.access_time_rounded,
-                          size: 13, color: Color(0xFFE53935)),
-                      const SizedBox(width: 5),
-                      Text('Deadline: ${item.deadlineTugas}',
-                          style: const TextStyle(fontSize: 12,
-                              color: Color(0xFFE53935),
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Poppins')),
-                    ]),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time_rounded,
+                          size: 13,
+                          color: Color(0xFFE53935),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Deadline: ${item.deadlineTugas}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFE53935),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.push(context,
+                    onPressed: () => Navigator.push(
+                      context,
                       MaterialPageRoute(
                         builder: (_) => UploadTugasScreen(
-                          idTugas:        item.idTugas ?? '',
-                          judulTugas:     item.judulTugas ?? item.judul,      // ← pakai judulTugas, fallback ke judul materi
-                          deskripsiTugas: item.deskripsiTugas ?? item.konten ?? '-', // ← pakai deskripsiTugas
-                          deadline:       item.deadlineTugas ?? '-',
-                          namaMapel:      namaMapel,
+                          idTugas: item.idTugas ?? '',
+                          judulTugas:
+                              item.judulTugas ??
+                              item.judul,
+                          deskripsiTugas:
+                              item.deskripsiTugas ??
+                              item.konten ??
+                              '-',
+                          deadline: item.deadlineTugas ?? '-',
+                          namaMapel: namaMapel,
                         ),
                       ),
                     ),
                     icon: const Icon(Icons.upload_rounded, size: 18),
                     label: Text(
                       sudahDikumpulkan ? 'Lihat Tugas' : 'Upload Tugas',
-                      style: const TextStyle(fontSize: 14,
-                          fontWeight: FontWeight.w700, fontFamily: 'Poppins'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: sudahDikumpulkan
@@ -612,7 +700,8 @@ class _TugasCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),

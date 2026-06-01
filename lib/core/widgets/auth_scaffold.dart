@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'app_textfield.dart';
 import 'app_button.dart';
 
-// ─────────────────────────────────────────────
-// COLOR (tetap sesuai desain kamu)
-// ─────────────────────────────────────────────
-const _kGreen     = Color(0xFF2E7D32);
-const _kGold      = Color(0xFFF5A623);
-const _kTextGray  = Color(0xFF888888);
+const _kGreen = Color(0xFF2E7D32);
+const _kGold = Color(0xFFF5A623);
+const _kTextGray = Color(0xFF888888);
 
-// ─────────────────────────────────────────────
-// HEADER
-// ─────────────────────────────────────────────
 class GreenHeader extends StatelessWidget {
   const GreenHeader({super.key});
 
@@ -35,7 +29,7 @@ class GreenHeader extends StatelessWidget {
                   color: Colors.black.withOpacity(0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
-                )
+                ),
               ],
             ),
             padding: const EdgeInsets.all(6),
@@ -71,18 +65,11 @@ class GreenHeader extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// AUTH SCAFFOLD (tidak berubah layout)
-// ─────────────────────────────────────────────
 class AuthScaffold extends StatelessWidget {
   final Widget body;
   final bool showBack;
 
-  const AuthScaffold({
-    super.key,
-    required this.body,
-    this.showBack = false,
-  });
+  const AuthScaffold({super.key, required this.body, this.showBack = false});
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +116,6 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// FOOTER
-// ─────────────────────────────────────────────
 class SecureFooter extends StatelessWidget {
   const SecureFooter({super.key});
 
@@ -160,13 +144,6 @@ class SecureFooter extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// ICON HELPER
-// ─────────────────────────────────────────────
 Widget fieldIcon(IconData icon) {
-  return Icon(
-    icon,
-    size: 18,
-    color: const Color(0xFF9E9E9E),
-  );
+  return Icon(icon, size: 18, color: const Color(0xFF9E9E9E));
 }

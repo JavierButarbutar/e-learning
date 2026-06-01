@@ -1,34 +1,18 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/storage/shared_pref.dart'; // sesuaikan path SharedPref milikmu
+import '../../../../core/storage/shared_pref.dart';
 import '../data/models/presensi_model.dart';
 import '../data/repositories/presensi_repository.dart';
 import '../data/services/presensi_service.dart';
 
-// ─────────────────────────────────────────────────────────────
-// STATE ENUM
-// ─────────────────────────────────────────────────────────────
 enum PresensiStatus { idle, loading, success, error }
 
-// ─────────────────────────────────────────────────────────────
-// PRESENSI PROVIDER
-//
-// Token diambil otomatis dari SharedPreferences — tidak perlu
-// dipass manual dari widget.
-//
-// Contoh pemakaian:
-//   await context.read<PresensiProvider>().fetchActivePresensi();
-//   context.watch<PresensiProvider>().presensiAktif;
-// ─────────────────────────────────────────────────────────────
 class PresensiProvider extends ChangeNotifier {
   final PresensiRepository _repo;
-  
-  PresensiProvider({PresensiRepository? repository})
-      : _repo = repository ?? PresensiRepository();
 
-  // ────────────────────────────────────────────────────────────
-  // HELPER: ambil token dari SharedPreferences
-  // ────────────────────────────────────────────────────────────
+  PresensiProvider({PresensiRepository? repository})
+    : _repo = repository ?? PresensiRepository();
+
   Future<String> _getToken() async {
     final token = await SharedPref.getToken();
     if (token == null || token.isEmpty) {
@@ -39,30 +23,23 @@ class PresensiProvider extends ChangeNotifier {
 
   PresensiAktifModel? _selectedPresensi;
 
-PresensiAktifModel? get selectedPresensi =>
-    _selectedPresensi;
+  PresensiAktifModel? get selectedPresensi => _selectedPresensi;
 
-void setSelectedPresensi(
-  PresensiAktifModel presensi,
-) {
-  _selectedPresensi = presensi;
-  notifyListeners();
-}
-  // ────────────────────────────────────────────────────────────
-  // STATE: PRESENSI AKTIF
-  // ────────────────────────────────────────────────────────────
+  void setSelectedPresensi(PresensiAktifModel presensi) {
+    _selectedPresensi = presensi;
+    notifyListeners();
+  }
+
   PresensiStatus _activeStatus = PresensiStatus.idle;
   List<PresensiAktifModel> _presensiAktif = [];
   String? _activeError;
 
   PresensiStatus get activeStatus => _activeStatus;
-  List<PresensiAktifModel> get presensiAktif => List.unmodifiable(_presensiAktif);
+  List<PresensiAktifModel> get presensiAktif =>
+      List.unmodifiable(_presensiAktif);
   String? get activeError => _activeError;
   bool get isLoadingActive => _activeStatus == PresensiStatus.loading;
 
-  // ────────────────────────────────────────────────────────────
-  // STATE: SCAN QR
-  // ────────────────────────────────────────────────────────────
   PresensiStatus _scanStatus = PresensiStatus.idle;
   ScanResultModel? _scanResult;
   String? _scanError;
@@ -74,16 +51,12 @@ void setSelectedPresensi(
   bool get sudahAbsen => _sudahAbsen;
   bool get isLoadingScan => _scanStatus == PresensiStatus.loading;
 
-  // ────────────────────────────────────────────────────────────
-  // STATE: RIWAYAT
-  // ────────────────────────────────────────────────────────────
   PresensiStatus _riwayatStatus = PresensiStatus.idle;
   List<RiwayatItemModel> _riwayat = [];
   PaginationModel? _pagination;
   String? _riwayatError;
   bool _isLoadingMore = false;
 
-  // Filter riwayat disimpan di state agar loadMore konsisten
   String? _filterTanggalMulai;
   String? _filterTanggalSelesai;
   int? _filterMapelId;
@@ -95,9 +68,6 @@ void setSelectedPresensi(
   bool get isLoadingMore => _isLoadingMore;
   bool get hasNextPage => _pagination?.hasNextPage ?? false;
 
-  // ────────────────────────────────────────────────────────────
-  // STATE: REKAP
-  // ────────────────────────────────────────────────────────────
   PresensiStatus _rekapStatus = PresensiStatus.idle;
   RekapModel? _rekap;
   String? _rekapError;
@@ -107,11 +77,6 @@ void setSelectedPresensi(
   String? get rekapError => _rekapError;
   bool get isLoadingRekap => _rekapStatus == PresensiStatus.loading;
 
-  // ────────────────────────────────────────────────────────────
-  // METHODS
-  // ────────────────────────────────────────────────────────────
-
-  /// Fetch presensi aktif hari ini untuk kelas siswa.
   Future<void> fetchActivePresensi() async {
     _activeStatus = PresensiStatus.loading;
     _activeError = null;
@@ -134,8 +99,6 @@ void setSelectedPresensi(
     notifyListeners();
   }
 
-  /// Submit scan QR code.
-  /// [latitude] dan [longitude] opsional (String karena dikirim ke API sebagai string).
   Future<void> submitScan({
     required String qrCode,
     String? latitude,
@@ -159,7 +122,7 @@ void setSelectedPresensi(
     } on PresensiException catch (e) {
       _scanStatus = PresensiStatus.error;
       _scanError = e.message;
-      // Tandai jika siswa memang sudah absen (HTTP 409)
+
       if (e.isSudahAbsen) _sudahAbsen = true;
     } catch (e) {
       _scanStatus = PresensiStatus.error;
@@ -171,15 +134,11 @@ void setSelectedPresensi(
     notifyListeners();
   }
 
-  /// Fetch riwayat halaman pertama (atau refresh).
-  /// Filter yang dipass disimpan di state sehingga [loadMoreRiwayat]
-  /// tidak perlu menerima parameter filter ulang.
   Future<void> fetchRiwayat({
     String? tanggalMulai,
     String? tanggalSelesai,
     int? mapelId,
   }) async {
-    // Simpan filter ke state
     _filterTanggalMulai = tanggalMulai;
     _filterTanggalSelesai = tanggalSelesai;
     _filterMapelId = mapelId;
@@ -215,8 +174,6 @@ void setSelectedPresensi(
     notifyListeners();
   }
 
-  /// Load halaman berikutnya dari riwayat (infinite scroll).
-  /// Filter diambil dari state — tidak perlu dipass dari widget.
   Future<void> loadMoreRiwayat() async {
     if (_isLoadingMore || !hasNextPage) return;
 
@@ -235,16 +192,12 @@ void setSelectedPresensi(
       );
       _riwayat = [..._riwayat, ...result.items];
       _pagination = result.pagination;
-    } catch (_) {
-      // Silent fail — list lama tetap tampil, user bisa scroll lagi
-    }
+    } catch (_) {}
 
     _isLoadingMore = false;
     notifyListeners();
   }
 
-  /// Fetch rekap statistik kehadiran.
-  /// [bulan] dan [tahun] opsional; jika tidak diisi, API return semua data.
   Future<void> fetchRekap({int? bulan, int? tahun}) async {
     _rekapStatus = PresensiStatus.loading;
     _rekapError = null;
@@ -267,11 +220,6 @@ void setSelectedPresensi(
     notifyListeners();
   }
 
-  // ────────────────────────────────────────────────────────────
-  // RESET HELPERS
-  // ────────────────────────────────────────────────────────────
-
-  /// Reset state scan sebelum scan ulang.
   void resetScan() {
     _scanStatus = PresensiStatus.idle;
     _scanResult = null;
@@ -280,7 +228,6 @@ void setSelectedPresensi(
     notifyListeners();
   }
 
-  /// Reset semua state (misal saat logout).
   void resetAll() {
     _activeStatus = PresensiStatus.idle;
     _presensiAktif = [];

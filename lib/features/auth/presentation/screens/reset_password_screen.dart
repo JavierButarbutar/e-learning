@@ -9,12 +9,10 @@ class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  State<ResetPasswordScreen> createState() =>
-      _ResetPasswordScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState
-    extends State<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _newCtrl = TextEditingController();
@@ -32,70 +30,64 @@ class _ResetPasswordScreenState
   }
 
   void _save() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  final args =
-      ModalRoute.of(context)?.settings.arguments as Map?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
 
-  final email = args?['email'];
+    final email = args?['email'];
 
-  if (email == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Email tidak ditemukan'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  setState(() => _loading = true);
-
-  try {
-    final result = await ApiService.resetPassword(
-      email: email,
-      password: _newCtrl.text,
-    );
-
-    if (!mounted) return;
-
-    setState(() => _loading = false);
-
-    if (result['success'] != true) {
+    if (email == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message']),
+        const SnackBar(
+          content: Text('Email tidak ditemukan'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // ✅ sukses
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/login',
-      (_) => false,
-    );
+    setState(() => _loading = true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Password berhasil diubah!'),
-        backgroundColor: Color(0xFF2E7D32),
-      ),
-    );
+    try {
+      final result = await ApiService.resetPassword(
+        email: email,
+        password: _newCtrl.text,
+      );
 
-  } catch (e) {
-    setState(() => _loading = false);
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Terjadi kesalahan: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
+      setState(() => _loading = false);
+
+      if (result['success'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password berhasil diubah!'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
@@ -103,8 +95,7 @@ class _ResetPasswordScreenState
       body: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Lupa Password',
@@ -129,29 +120,23 @@ class _ResetPasswordScreenState
 
             const SizedBox(height: 24),
 
-            // PASSWORD BARU
             AppTextField(
               label: 'Password',
               hint: 'Masukkan Password Baru',
               controller: _newCtrl,
               obscureText: _obscureNew,
-              prefixIcon:
-                  Icons.lock_outline_rounded,
+              prefixIcon: Icons.lock_outline_rounded,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureNew
-                      ? Icons
-                          .visibility_off_outlined
-                      : Icons
-                          .visibility_outlined,
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   size: 20,
-                  color:
-                      const Color(0xFF9E9E9E),
+                  color: const Color(0xFF9E9E9E),
                 ),
                 onPressed: () {
                   setState(() {
-                    _obscureNew =
-                        !_obscureNew;
+                    _obscureNew = !_obscureNew;
                   });
                 },
               ),
@@ -170,29 +155,23 @@ class _ResetPasswordScreenState
 
             const SizedBox(height: 14),
 
-            // KONFIRMASI PASSWORD
             AppTextField(
               label: 'Konfirmasi Password',
               hint: 'Masukkan Password',
               controller: _confCtrl,
               obscureText: _obscureConf,
-              prefixIcon:
-                  Icons.lock_outline_rounded,
+              prefixIcon: Icons.lock_outline_rounded,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConf
-                      ? Icons
-                          .visibility_off_outlined
-                      : Icons
-                          .visibility_outlined,
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   size: 20,
-                  color:
-                      const Color(0xFF9E9E9E),
+                  color: const Color(0xFF9E9E9E),
                 ),
                 onPressed: () {
                   setState(() {
-                    _obscureConf =
-                        !_obscureConf;
+                    _obscureConf = !_obscureConf;
                   });
                 },
               ),

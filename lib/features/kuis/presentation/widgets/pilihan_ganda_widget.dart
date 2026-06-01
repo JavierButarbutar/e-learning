@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import '../../data/models/soal_model.dart';
 import '../../provider/kuis_provider.dart';
 
-/// Daftar pilihan A/B/C/D.
-/// Tap pilihan → kirim id_pilihan ke provider (bukan label/teks).
-/// Layout otomatis berubah ke grid jika ada gambar di pilihan.
+
+
+
 class PilihanGandaWidget extends StatelessWidget {
   final SoalModel soal;
 
@@ -27,7 +27,7 @@ class PilihanGandaWidget extends StatelessWidget {
   }
 }
 
-// ── List layout ───────────────────────────────────────────────────────────────
+
 class _PilihanList extends StatelessWidget {
   final SoalModel soal;
   final List<PilihanModel> pilihan;
@@ -43,7 +43,7 @@ class _PilihanList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: pilihan.map((p) {
-        // isSelected: bandingkan id_pilihan yang tersimpan
+
         final isSelected = kuis.jawaban[soal.idSoal] == p.idPilihan;
 
         return GestureDetector(
@@ -93,7 +93,7 @@ class _PilihanList extends StatelessWidget {
   }
 }
 
-// ── Grid layout (ada gambar) ──────────────────────────────────────────────────
+
 class _PilihanGrid extends StatelessWidget {
   final SoalModel soal;
   final List<PilihanModel> pilihan;
@@ -135,7 +135,7 @@ class _PilihanGrid extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Gambar
+
                 Expanded(
                   child: p.gambarUrl != null
                       ? ClipRRect(
@@ -163,7 +163,7 @@ class _PilihanGrid extends StatelessWidget {
                       : _imgError(),
                 ),
 
-                // Label + teks
+
                 Padding(
                   padding: const EdgeInsets.all(10),
                   child: Row(
@@ -213,7 +213,7 @@ class _PilihanGrid extends StatelessWidget {
       );
 }
 
-// ── Label bullet ──────────────────────────────────────────────────────────────
+
 class _LabelBullet extends StatelessWidget {
   final String label;
   final bool isSelected;

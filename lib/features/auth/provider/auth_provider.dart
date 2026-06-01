@@ -4,10 +4,7 @@ import '../data/repositories/auth_repository.dart';
 import '../../../features/notifikasi/data/services/notifikasi_service.dart';
 import '../../../features/guru/notifikasi/data/services/notifikasi_service.dart';
 
-/// Mengelola state dan orkestrasi proses autentikasi.
-/// Screen hanya listen ke provider ini — tidak ada logika bisnis di screen.
 class AuthProvider extends ChangeNotifier {
-  // ── State ─────────────────────────────────────────────────────────────────
   bool _isLoading = false;
   String? _errorMessage;
   String? _savedEmail;
@@ -16,8 +13,6 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get savedEmail => _savedEmail;
 
-  // ── Load kredensial tersimpan ─────────────────────────────────────────────
-  /// Dipanggil dari initState LoginScreen.
   Future<void> loadSavedCredentials() async {
     final saved = await AuthRepository.getSavedCredentials();
     if (saved != null) {
@@ -26,9 +21,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
-  /// Mengembalikan role ('guru' / 'siswa') jika berhasil, null jika gagal.
-  /// Screen menggunakan return value ini untuk navigasi.
   Future<String?> login({
     required String email,
     required String password,
@@ -38,10 +30,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final result = await AuthService.login(
-        email: email,
-        password: password,
-      );
+      final result = await AuthService.login(email: email, password: password);
 
       if (!result.success) {
         _setError(result.errorMessage ?? 'Login gagal');
@@ -59,7 +48,7 @@ class AuthProvider extends ChangeNotifier {
       if (result.role == 'guru') {
         await NotificationService.initialize();
       }
-      
+
       return result.role;
     } catch (e) {
       _setError('Terjadi kesalahan: $e');
@@ -69,14 +58,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     await AuthRepository.clearSession();
     _savedEmail = null;
     notifyListeners();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

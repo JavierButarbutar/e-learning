@@ -34,26 +34,40 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
 
   Future<void> _loadJadwal() async {
     try {
-      setState(() { _isLoading = true; _error = null; });
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
 
       final token = await SharedPref.getToken();
       if (token == null || token.isEmpty) {
-        setState(() { _error = "Token tidak ditemukan"; });
+        setState(() {
+          _error = "Token tidak ditemukan";
+        });
         return;
       }
 
       final result = await ApiService.getJadwalGuru(token: token);
 
       if (result.isEmpty) {
-        setState(() { _error = "Data jadwal kosong"; });
+        setState(() {
+          _error = "Data jadwal kosong";
+        });
         return;
       }
 
-      setState(() { _jadwalMap = result; });
+      setState(() {
+        _jadwalMap = result;
+      });
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
@@ -72,15 +86,36 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
   }
 
   String _tanggalHariIni() {
-    const hari  = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-    const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const hari = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
+    ];
+    const bulan = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return '${hari[_today.weekday - 1]}, ${_today.day} ${bulan[_today.month - 1]} ${_today.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     final jadwal = _jadwalHariIni;
-    final aktif  = _jadwalAktif;
+    final aktif = _jadwalAktif;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -91,46 +126,46 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(child: Text(_error!))
-                    : RefreshIndicator(
-                        onRefresh: _loadJadwal,
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Column(
-                            children: [
-                              _DayPicker(
-                                weekDays: _weekDays,
-                                today: _today,
-                                selected: _selectedHari,
-                                onSelect: (h) => setState(() => _selectedHari = h),
-                              ),
-                              const SizedBox(height: 20),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 20),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'MATA PELAJARAN BERIKUTNYA',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF888888),
-                                      letterSpacing: 0.8,
-                                      fontFamily: 'Poppins',
-                                    ),
-                                  ),
+                ? Center(child: Text(_error!))
+                : RefreshIndicator(
+                    onRefresh: _loadJadwal,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          _DayPicker(
+                            weekDays: _weekDays,
+                            today: _today,
+                            selected: _selectedHari,
+                            onSelect: (h) => setState(() => _selectedHari = h),
+                          ),
+                          const SizedBox(height: 20),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'MATA PELAJARAN BERIKUTNYA',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF888888),
+                                  letterSpacing: 0.8,
+                                  fontFamily: 'Poppins',
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              if (jadwal.isEmpty)
-                                _EmptyJadwal()
-                              else
-                                ...jadwal.map((j) => _JadwalCard(item: j)),
-                              const SizedBox(height: 24),
-                            ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          if (jadwal.isEmpty)
+                            _EmptyJadwal()
+                          else
+                            ...jadwal.map((j) => _JadwalCard(item: j)),
+                          const SizedBox(height: 24),
+                        ],
                       ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -162,7 +197,6 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
               ),
               const Spacer(),
 
-              // ── ICON LONCENG + BADGE ──
               GestureDetector(
                 onTap: () async {
                   await Navigator.push(
@@ -171,17 +205,16 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
                       builder: (_) => const NotifikasiGuruScreen(),
                     ),
                   );
-                  // Refresh unread count setelah balik
+
                   if (context.mounted) {
-                    context
-                        .read<NotifikasiGuruProvider>()
-                        .loadNotifikasi(refresh: true);
+                    context.read<NotifikasiGuruProvider>().loadNotifikasi(
+                      refresh: true,
+                    );
                   }
                 },
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // Lingkaran lonceng
                     Container(
                       width: 36,
                       height: 36,
@@ -196,23 +229,29 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
                       ),
                     ),
 
-                    // Badge merah
                     Consumer<NotifikasiGuruProvider>(
                       builder: (context, prov, _) {
-                        if (prov.unreadCount == 0) return const SizedBox.shrink();
+                        if (prov.unreadCount == 0)
+                          return const SizedBox.shrink();
                         return Positioned(
                           top: -4,
                           right: -4,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
                             constraints: const BoxConstraints(
-                                minWidth: 16, minHeight: 16),
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                  color: const Color(0xFF2E7D32), width: 1.5),
+                                color: const Color(0xFF2E7D32),
+                                width: 1.5,
+                              ),
                             ),
                             child: Text(
                               prov.unreadCount > 99
@@ -278,7 +317,6 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
   }
 }
 
-// ── Banner kelas yang sedang berlangsung ──────────────────────
 class _ActiveClassBanner extends StatelessWidget {
   final JadwalItem item;
   const _ActiveClassBanner({required this.item});
@@ -293,41 +331,71 @@ class _ActiveClassBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
-      child: Row(children: [
-        Container(
-          width: 38, height: 38,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFF5A623),
-          ),
-          child: const Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Saatnya mengajar di',
-              style: TextStyle(fontSize: 11, color: Colors.white70, fontFamily: 'Poppins')),
-            Text('${item.namaKelas} ${item.mataPelajaran}',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
-                  color: Colors.white, fontFamily: 'Poppins')),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text('Sedang Berlangsung',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700,
-                    color: Colors.white, fontFamily: 'Poppins')),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFF5A623),
             ),
-          ]),
-        ),
-      ]),
+            child: const Icon(
+              Icons.volume_up_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Saatnya mengajar di',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white70,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                Text(
+                  '${item.namaKelas} ${item.mataPelajaran}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'Sedang Berlangsung',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ── Day picker horizontal ─────────────────────────────────────
 class _DayPicker extends StatelessWidget {
   final List<String> weekDays;
   final DateTime today;
@@ -335,8 +403,10 @@ class _DayPicker extends StatelessWidget {
   final ValueChanged<String> onSelect;
 
   const _DayPicker({
-    required this.weekDays, required this.today,
-    required this.selected, required this.onSelect,
+    required this.weekDays,
+    required this.today,
+    required this.selected,
+    required this.onSelect,
   });
 
   @override
@@ -347,45 +417,58 @@ class _DayPicker extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: List.generate(weekDays.length, (i) {
-          final hari   = weekDays[i];
-          final date   = monday.add(Duration(days: i));
+          final hari = weekDays[i];
+          final date = monday.add(Duration(days: i));
           final isToday = hari == namaHari(today);
-          final isSel  = hari == selected;
+          final isSel = hari == selected;
 
           return Expanded(
             child: GestureDetector(
               onTap: () => onSelect(hari),
-              child: Column(children: [
-                Text(singkatanHari(hari),
-                  style: TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w700,
-                    color: isSel ? const Color(0xFF2E7D32) : const Color(0xFF888888),
-                    fontFamily: 'Poppins',
-                  )),
-                const SizedBox(height: 6),
-                Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSel ? const Color(0xFF2E7D32) : Colors.transparent,
-                    border: isToday && !isSel
-                        ? Border.all(color: const Color(0xFF2E7D32), width: 2)
-                        : null,
+              child: Column(
+                children: [
+                  Text(
+                    singkatanHari(hari),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isSel
+                          ? const Color(0xFF2E7D32)
+                          : const Color(0xFF888888),
+                      fontFamily: 'Poppins',
+                    ),
                   ),
-                  child: Center(
-                    child: Text('${date.day}',
-                      style: TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w700,
-                        color: isSel
-                            ? Colors.white
-                            : isToday
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFF1A1A1A),
-                        fontFamily: 'Poppins',
-                      )),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSel
+                          ? const Color(0xFF2E7D32)
+                          : Colors.transparent,
+                      border: isToday && !isSel
+                          ? Border.all(color: const Color(0xFF2E7D32), width: 2)
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${date.day}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isSel
+                              ? Colors.white
+                              : isToday
+                              ? const Color(0xFF2E7D32)
+                              : const Color(0xFF1A1A1A),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ),
           );
         }),
@@ -399,9 +482,12 @@ class _JadwalCard extends StatelessWidget {
   const _JadwalCard({required this.item});
 
   bool get _isRapat => item.mataPelajaran == 'Rapat Guru';
-  Color get _iconBg => _isRapat ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9);
-  Color get _iconColor => _isRapat ? const Color(0xFFF5A623) : const Color(0xFF2E7D32);
-  IconData get _icon => _isRapat ? Icons.groups_outlined : Icons.menu_book_outlined;
+  Color get _iconBg =>
+      _isRapat ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9);
+  Color get _iconColor =>
+      _isRapat ? const Color(0xFFF5A623) : const Color(0xFF2E7D32);
+  IconData get _icon =>
+      _isRapat ? Icons.groups_outlined : Icons.menu_book_outlined;
 
   @override
   Widget build(BuildContext context) {
@@ -418,18 +504,33 @@ class _JadwalCard extends StatelessWidget {
         children: [
           SizedBox(
             width: 55,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(item.jamMulai,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
-              const SizedBox(height: 2),
-              Text(item.jamSelesai,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF888888),
-                    fontFamily: 'Poppins')),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.jamMulai,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A1A),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.jamSelesai,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF888888),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
           ),
           Container(
-            width: 2, height: 60,
+            width: 2,
+            height: 60,
             margin: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: _iconColor.withOpacity(0.2),
@@ -437,7 +538,8 @@ class _JadwalCard extends StatelessWidget {
             ),
           ),
           Container(
-            width: 42, height: 42,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: _iconBg,
               borderRadius: BorderRadius.circular(12),
@@ -446,15 +548,30 @@ class _JadwalCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(item.namaKelas,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
-              const SizedBox(height: 4),
-              Text(item.mataPelajaran,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                    color: Color(0xFF2E7D32), fontFamily: 'Poppins')),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.namaKelas,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A1A),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.mataPelajaran,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2E7D32),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -467,25 +584,42 @@ class _EmptyJadwal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(children: [
-        Container(
-          width: 80, height: 80,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(20),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.event_available_outlined,
+              color: Color(0xFF2E7D32),
+              size: 40,
+            ),
           ),
-          child: const Icon(Icons.event_available_outlined,
-              color: Color(0xFF2E7D32), size: 40),
-        ),
-        const SizedBox(height: 16),
-        const Text('Tidak ada jadwal hari ini',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A1A), fontFamily: 'Poppins')),
-        const SizedBox(height: 6),
-        const Text('Nikmati hari libur mengajarmu!',
-          style: TextStyle(fontSize: 13, color: Color(0xFF888888),
-              fontFamily: 'Poppins')),
-      ]),
+          const SizedBox(height: 16),
+          const Text(
+            'Tidak ada jadwal hari ini',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1A1A),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Nikmati hari libur mengajarmu!',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF888888),
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

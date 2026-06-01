@@ -9,11 +9,6 @@ import '../../../../core/helpers/force_logout_helper.dart';
 import '../../../notifikasi/data/repositories/notifikasi_repository.dart';
 import '../../../guru/notifikasi/data/repositories/notifikasi_guru_repository.dart';
 
-/// Screen login — hanya bertanggung jawab untuk:
-/// 1. Render UI (form, textfield, button)
-/// 2. Listen state dari AuthProvider
-/// 3. Trigger provider.login() saat tombol ditekan
-/// 4. Navigasi berdasarkan role yang dikembalikan provider
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -51,8 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  /// Minta provider load kredensial tersimpan,
-  /// lalu isi controller jika ada.
   void _loadSavedCredentials() async {
     final provider = context.read<AuthProvider>();
     await provider.loadSavedCredentials();
@@ -74,7 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ── Trigger login via provider ────────────────────────────────────────────
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -86,7 +78,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    // Tampilkan error jika login gagal
     if (role == null) {
       final error = context.read<AuthProvider>().errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await NotifikasiRepository.updateFcmToken(fcmToken);
       }
     }
-    // Navigasi berdasarkan role dari server
+
     Navigator.pushReplacementNamed(
       context,
       role == 'guru' ? '/home-guru' : '/home',
@@ -115,7 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Consumer untuk rebuild hanya bagian yang butuh state loading
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         return AuthScaffold(
@@ -143,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // ── Email ──────────────────────────────────────────
                 AppTextField(
                   label: 'Email',
                   hint: 'Masukkan email kamu',
@@ -158,7 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // ── Password ───────────────────────────────────────
                 AppTextField(
                   label: 'Password',
                   hint: 'Masukkan Password',
@@ -182,8 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-
-                // ── Remember & Forgot ──────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -197,10 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const Text(
                           'Ingat Saya',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                         ),
                       ],
                     ),
@@ -209,17 +192,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.pushNamed(context, '/forgot-password'),
                       child: const Text(
                         'Lupa Password?',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
 
-                // ── Tombol Login ───────────────────────────────────
                 AppButton(
                   text: 'Masuk',
                   isLoading: auth.isLoading,

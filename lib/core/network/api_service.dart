@@ -4,44 +4,38 @@ import '../constants/api_endpoints.dart';
 import '../../../features/guru/dashboard/data/models/jadwal_model.dart';
 
 class ApiService {
-
-  // ================= LOGIN =================
   static Future<Map<String, dynamic>> login({
-  required String email,
-  required String password,
-  String? fcmToken, // tambah
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.login),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "email": email,
-        "password": password,
-        if (fcmToken != null) "fcm_token": fcmToken, // tambah
-      }),
-    );
+    required String email,
+    required String password,
+    String? fcmToken,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.login),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+          if (fcmToken != null) "fcm_token": fcmToken,
+        }),
+      );
 
-    final data = _safeDecode(response.body);
+      final data = _safeDecode(response.body);
 
-    return {
-      "success": data['success'] ?? false,
-      "message": data['message'] ?? '',
-      "data": data['data'],
-      "statusCode": response.statusCode, // tambah
-    };
-  } catch (e) {
-    return {
-      "success": false,
-      "message": "Tidak dapat terhubung ke server",
-    };
+      return {
+        "success": data['success'] ?? false,
+        "message": data['message'] ?? '',
+        "data": data['data'],
+        "statusCode": response.statusCode,
+      };
+    } catch (e) {
+      return {"success": false, "message": "Tidak dapat terhubung ke server"};
+    }
   }
-}
 
-  // ================= GET STUDENT PROFILE =================
   static Future<Map<String, dynamic>> getStudentProfile({
     required String token,
   }) async {
@@ -71,7 +65,6 @@ class ApiService {
     }
   }
 
-  // ================= UPDATE STUDENT PROFILE =================
   static Future<Map<String, dynamic>> updateStudentProfile({
     required String token,
     required Map<String, dynamic> data,
@@ -103,7 +96,6 @@ class ApiService {
     }
   }
 
-  // ================= CHECK EMAIL =================
   static Future<Map<String, dynamic>> checkEmail({
     required String email,
   }) async {
@@ -114,9 +106,7 @@ class ApiService {
           "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: jsonEncode({
-          "email": email,
-        }),
+        body: jsonEncode({"email": email}),
       );
 
       final data = _safeDecode(response.body);
@@ -130,10 +120,7 @@ class ApiService {
     }
   }
 
-  // ================= SEND OTP =================
-  static Future<Map<String, dynamic>> sendOtp({
-    required String email,
-  }) async {
+  static Future<Map<String, dynamic>> sendOtp({required String email}) async {
     try {
       final response = await http.post(
         Uri.parse(ApiEndpoint.sendOtp),
@@ -141,9 +128,7 @@ class ApiService {
           "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: jsonEncode({
-          "email": email,
-        }),
+        body: jsonEncode({"email": email}),
       );
 
       final data = _safeDecode(response.body);
@@ -157,7 +142,6 @@ class ApiService {
     }
   }
 
-  // ================= VERIFY OTP =================
   static Future<Map<String, dynamic>> verifyOtp({
     required String email,
     required String otp,
@@ -169,10 +153,7 @@ class ApiService {
           "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: jsonEncode({
-          "email": email,
-          "otp": otp,
-        }),
+        body: jsonEncode({"email": email, "otp": otp}),
       );
 
       final data = _safeDecode(response.body);
@@ -188,7 +169,6 @@ class ApiService {
     }
   }
 
-  // ================= RESET PASSWORD =================
   static Future<Map<String, dynamic>> resetPassword({
     required String email,
     required String password,
@@ -200,10 +180,7 @@ class ApiService {
           "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
+        body: jsonEncode({"email": email, "password": password}),
       );
 
       final data = _safeDecode(response.body);
@@ -217,7 +194,6 @@ class ApiService {
     }
   }
 
-  // ================= UPDATE PASSWORD =================
   static Future<Map<String, dynamic>> updatePassword({
     required String token,
     required String oldPassword,
@@ -245,14 +221,10 @@ class ApiService {
         "message": data['message'] ?? '',
       };
     } catch (e) {
-      return {
-        "success": false,
-        "message": "Tidak dapat terhubung ke server",
-      };
+      return {"success": false, "message": "Tidak dapat terhubung ke server"};
     }
   }
 
-  // ================= UPDATE EMAIL =================
   static Future<Map<String, dynamic>> updateEmail({
     required String token,
     required String email,
@@ -265,9 +237,7 @@ class ApiService {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "email": email,
-        }),
+        body: jsonEncode({"email": email}),
       );
 
       final data = _safeDecode(response.body);
@@ -282,10 +252,7 @@ class ApiService {
     }
   }
 
-  // ================= LOGOUT =================
-  static Future<Map<String, dynamic>> logout({
-    required String token,
-  }) async {
+  static Future<Map<String, dynamic>> logout({required String token}) async {
     try {
       final response = await http.post(
         Uri.parse(ApiEndpoint.logout),
@@ -307,96 +274,72 @@ class ApiService {
     }
   }
 
- // ================= GET JADWAL GURU =================
+  static Future<Map<String, List<JadwalItem>>> getJadwalGuru({
+    required String token,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiEndpoint.jadwalGuruSemua),
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
-static Future<Map<String, List<JadwalItem>>> getJadwalGuru({
-  required String token,
-}) async {
-  try {
-    final response = await http.get(
-      Uri.parse(ApiEndpoint.jadwalGuruSemua),
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
+      final data = _safeDecode(response.body);
+      print("STATUS CODE : ${response.statusCode}");
+      print("STATUS : ${response.statusCode}");
+      print("BODY : ${response.body}");
+      print("DATA : $data");
+      if (response.statusCode != 200 ||
+          data == null ||
+          data['success'] != true) {
+        return {};
+      }
+      final minggu = data['data']?['jadwal_minggu'] as List? ?? [];
+      Map<String, List<JadwalItem>> hasil = {};
 
-    final data = _safeDecode(response.body);
+      for (final item in minggu) {
+        final hariLabel = item['label']?.toString() ?? '';
 
-    // DEBUG RESPONSE
-    print("STATUS CODE : ${response.statusCode}");
-    print("STATUS : ${response.statusCode}");
-    print("BODY : ${response.body}");
-    print("DATA : $data");
+        final jadwalList = item['jadwal'] as List? ?? [];
 
-    // Validasi response
-    if (response.statusCode != 200 ||
-        data == null ||
-        data['success'] != true) {
+        hasil[hariLabel] = jadwalList.map((e) {
+          return JadwalItem.fromJson({...e, 'hari_label': hariLabel});
+        }).toList();
+      }
+
+      return hasil;
+    } catch (e) {
+      print("ERROR GET JADWAL GURU : $e");
       return {};
     }
+  }
 
-    // Ambil jadwal minggu
-    final minggu =
-        data['data']?['jadwal_minggu'] as List? ?? [];
+  static Future<void> updateFcmToken({
+    required String token,
+    required String fcmToken,
+  }) async {
+    try {
+      print(ApiEndpoint.updateFcmToken);
 
-    // Penampung hasil
-    Map<String, List<JadwalItem>> hasil = {};
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.updateFcmToken),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"fcm_token": fcmToken}),
+      );
 
-    for (final item in minggu) {
-      final hariLabel =
-          item['label']?.toString() ?? '';
-
-      final jadwalList =
-          item['jadwal'] as List? ?? [];
-
-      hasil[hariLabel] = jadwalList.map((e) {
-        return JadwalItem.fromJson({
-          ...e,
-          'hari_label': hariLabel,
-        });
-      }).toList();
+      print("STATUS : ${response.statusCode}");
+      print("BODY : ${response.body}");
+    } catch (e) {
+      print("ERROR UPDATE TOKEN : $e");
     }
-
-    return hasil;
-  } catch (e) {
-    print("ERROR GET JADWAL GURU : $e");
-    return {};
   }
-}
 
-static Future<void> updateFcmToken({
-  required String token,
-  required String fcmToken,
-}) async {
-
-  try {
-
-    print(ApiEndpoint.updateFcmToken);
-
-    final response = await http.post(
-      Uri.parse(ApiEndpoint.updateFcmToken),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "fcm_token": fcmToken,
-      }),
-    );
-
-    print("STATUS : ${response.statusCode}");
-    print("BODY : ${response.body}");
-
-  } catch (e) {
-
-    print("ERROR UPDATE TOKEN : $e");
-
-  }
-}
-
-  // ================= HELPER =================
   static Map<String, dynamic> _safeDecode(String body) {
     try {
       final decoded = jsonDecode(body);
@@ -408,9 +351,6 @@ static Future<void> updateFcmToken({
   }
 
   static Map<String, dynamic> _errorResponse(String message) {
-    return {
-      "success": false,
-      "message": message,
-    };
+    return {"success": false, "message": message};
   }
 }

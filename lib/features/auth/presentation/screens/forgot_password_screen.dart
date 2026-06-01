@@ -8,12 +8,10 @@ class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
 
@@ -25,65 +23,49 @@ class _ForgotPasswordScreenState
     super.dispose();
   }
 
-  // ================= NEXT =================
   void _next() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _loading = true);
+    setState(() => _loading = true);
 
-  try {
-    final email = _emailCtrl.text.trim();
+    try {
+      final email = _emailCtrl.text.trim();
+      final check = await ApiService.checkEmail(email: email);
 
-    // 🔍 STEP 1: CEK EMAIL
-    final check = await ApiService.checkEmail(email: email);
+      if (check['success'] != true) {
+        setState(() => _loading = false);
 
-    if (check['success'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(check['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      final otp = await ApiService.sendOtp(email: email);
+
+      setState(() => _loading = false);
+
+      if (otp['success'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(otp['message']), backgroundColor: Colors.red),
+        );
+        return;
+      }
+      Navigator.pushNamed(context, '/otp', arguments: {'email': email});
+    } catch (e) {
       setState(() => _loading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(check['message']),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
     }
-
-    // 📩 STEP 2: KIRIM OTP
-    final otp = await ApiService.sendOtp(email: email);
-
-    setState(() => _loading = false);
-
-    if (otp['success'] != true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(otp['message']),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // ✅ PINDAH KE OTP SCREEN
-    Navigator.pushNamed(
-      context,
-      '/otp',
-      arguments: {'email': email},
-    );
-
-  } catch (e) {
-    setState(() => _loading = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Terjadi kesalahan: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
 
-  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
@@ -115,8 +97,6 @@ class _ForgotPasswordScreenState
             ),
 
             const SizedBox(height: 24),
-
-            // EMAIL FIELD
             AppTextField(
               label: 'Email',
               hint: 'Masukkan email terdaftar',
@@ -128,9 +108,7 @@ class _ForgotPasswordScreenState
                   return 'Email wajib diisi';
                 }
 
-                final emailRegex = RegExp(
-                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                );
+                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
                 if (!emailRegex.hasMatch(v)) {
                   return 'Format email tidak valid';
@@ -141,8 +119,6 @@ class _ForgotPasswordScreenState
             ),
 
             const SizedBox(height: 24),
-
-            // BUTTON
             AppButton(
               text: 'Selanjutnya',
               onPressed: _next,

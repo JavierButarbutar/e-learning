@@ -1,6 +1,5 @@
 import 'user_model.dart';
-/// Model hasil dari proses login.
-/// Menggantikan AuthResult yang sebelumnya ada di dalam auth_service.dart
+
 class AuthResult {
   final bool success;
   final String? errorMessage;
@@ -20,13 +19,7 @@ class AuthResult {
     required String token,
     required String role,
     required UserModel user,
-  }) =>
-      AuthResult._(
-        success: true,
-        token: token,
-        role: role,
-        user: user,
-      );
+  }) => AuthResult._(success: true, token: token, role: role, user: user);
 
   factory AuthResult.failure(String message) =>
       AuthResult._(success: false, errorMessage: message);

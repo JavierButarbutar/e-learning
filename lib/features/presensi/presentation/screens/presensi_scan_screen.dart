@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart'
+    as mlkit;
+import 'package:flutter_zxing/flutter_zxing.dart' as fz;
 
 import '../../provider/presensi_provider.dart';
 import '../widgets/control_button.dart';
@@ -21,8 +25,6 @@ class _PresensiScreenState extends State<PresensiScreen>
   bool _flashOn = false;
   bool _scanning = false;
   bool _cameraPermissionGranted = false;
-
-  // guard supaya scanner tidak detect berkali-kali
   bool _handled = false;
 
   late final MobileScannerController _cameraController;
@@ -33,7 +35,6 @@ class _PresensiScreenState extends State<PresensiScreen>
   void initState() {
     super.initState();
 
-    // ── FIX: tambahkan detectionSpeed noDuplicates ──
     _cameraController = MobileScannerController(
       facing: CameraFacing.back,
       torchEnabled: false,
@@ -50,37 +51,28 @@ class _PresensiScreenState extends State<PresensiScreen>
     _requestCameraPermission();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-    await context.read<PresensiProvider>()
-        .fetchActivePresensi();
-
-    debugPrint(
-      'ACTIVE PRESENSI: ${context.read<PresensiProvider>().presensiAktif.length}',
-    );
-  });
+      await context.read<PresensiProvider>().fetchActivePresensi();
+      debugPrint(
+        'ACTIVE PRESENSI: ${context.read<PresensiProvider>().presensiAktif.length}',
+      );
+    });
   }
 
   @override
   void dispose() {
     _scanAnim.dispose();
-
     try {
       _cameraController.dispose();
     } catch (_) {}
-
     super.dispose();
   }
 
   Future<void> _requestCameraPermission() async {
     if (_cameraPermissionGranted) return;
-
     final status = await Permission.camera.request();
-
     if (!mounted) return;
-
     if (status.isGranted) {
-      setState(() {
-        _cameraPermissionGranted = true;
-      });
+      setState(() => _cameraPermissionGranted = true);
     } else if (status.isDenied) {
       _showSnackBar('Izin kamera diperlukan untuk scan QR');
     } else if (status.isPermanentlyDenied) {
@@ -88,145 +80,170 @@ class _PresensiScreenState extends State<PresensiScreen>
     }
   }
 
-  // ─────────────────────────────────────────────
-  // FIX BESAR:
-  // - jangan await stop()
-  // - kasih delay kecil
-  // - hindari multi detect
-  // ─────────────────────────────────────────────
-  Future<void> _onDetect(String qrCode) async {
-  if (_scanning || _handled) return;
-
-  _handled = true;
-
-  setState(() {
-    _scanning = true;
-  });
-
-  try {
-    debugPrint('QR DETECTED: $qrCode');
-
-    if (!mounted) return;
-
-    final provider = context.read<PresensiProvider>();
-
-    debugPrint(
-      'JUMLAH PRESENSI: ${provider.presensiAktif.length}',
+  void _showSnackBar(String msg, {Color bg = const Color(0xFF323232)}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: bg,
+      ),
     );
-    provider.resetScan();
+  }
 
-    // ==============================
-    // VALIDASI QR PRESENSI
-    // ==============================
+  Future<void> _processQr(String qrCode) async {
+    if (_scanning || _handled) return;
 
-    PresensiAktifModel? matchedPresensi;
+    _handled = true;
+    setState(() => _scanning = true);
 
-    for (final item in provider.presensiAktif) {
-      final qrDb =
-          item.qrCode
-              ?.toString()
-              .trim()
-              .toLowerCase() ?? '';
+    try {
+      if (!mounted) return;
 
-      final scanned =
-          qrCode
-              .toString()
-              .trim()
-              .toLowerCase();
+      final provider = context.read<PresensiProvider>();
 
-      debugPrint('QR DB = [$qrDb]');
-      debugPrint('QR SCAN = [$scanned]');
-
-      if (qrDb == scanned) {
-        matchedPresensi = item;
-        break;
+      if (provider.presensiAktif.isEmpty) {
+        await provider.fetchActivePresensi();
       }
-    }
 
-    // kalau tidak ditemukan
-    if (matchedPresensi == null) {
-      setState(() {
-        _scanning = false;
-      });
+      if (!mounted) return;
 
-      _handled = false;
+      provider.resetScan();
 
-      _showSnackBar(
-        'QR tidak valid untuk presensi',
-        bg: Colors.red,
+      final scanned = qrCode.trim().toLowerCase();
+
+      debugPrint('QR SCAN = [$scanned]');
+      debugPrint('JUMLAH PRESENSI AKTIF: ${provider.presensiAktif.length}');
+
+      PresensiAktifModel? matchedPresensi;
+      for (final item in provider.presensiAktif) {
+        final qrDb = item.qrCode?.trim().toLowerCase() ?? '';
+        debugPrint('QR DB = [$qrDb]');
+        if (qrDb == scanned) {
+          matchedPresensi = item;
+          break;
+        }
+      }
+
+      if (matchedPresensi == null) {
+        setState(() => _scanning = false);
+        _handled = false;
+        _showSnackBar('QR tidak valid untuk presensi', bg: Colors.red);
+        return;
+      }
+
+      provider.setSelectedPresensi(matchedPresensi);
+
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => KonfirmasiKehadiranScreen(qrCode: qrCode),
+        ),
       );
 
-      return;
-    }
+      if (!mounted) return;
 
-    // simpan presensi sesuai QR
-    provider.setSelectedPresensi(
-      matchedPresensi,
-    );
+      if (result == true) {
+        await provider.fetchActivePresensi();
+        if (!mounted) return;
+        Navigator.pop(context, true);
+        return;
+      }
 
-    final result = await Navigator.push<bool>(
-  context,
-  MaterialPageRoute(
-    builder: (_) => KonfirmasiKehadiranScreen(
-      qrCode: qrCode,
-    ),
-  ),
-);
+      setState(() {
+        _scanning = false;
+        _handled = false;
+      });
 
-if (result == true) {
-  await provider.fetchActivePresensi();
-
-  if (!mounted) return;
-
-  Navigator.pop(context, true);
-  return;
-}
-
-    if (!mounted) return;
-
-    setState(() {
-      _scanning = false;
-      _handled = false;
-    });
-
-    if (result != true) {
       try {
         await _cameraController.start();
       } catch (e) {
         debugPrint('START CAMERA ERROR: $e');
       }
+    } catch (e, s) {
+      debugPrint('SCAN ERROR: $e');
+      debugPrintStack(stackTrace: s);
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _handled = false;
+      });
+      _showSnackBar('Error: ${e.toString()}', bg: Colors.red);
     }
-  } catch (e, s) {
-    debugPrint('SCAN ERROR: $e');
-    debugPrintStack(stackTrace: s);
-
-    if (!mounted) return;
-
-    setState(() {
-      _scanning = false;
-      _handled = false;
-    });
-
-    _showSnackBar(
-      'Error: ${e.toString()}',
-      bg: Colors.red,
-    );
   }
-}
 
-  void _showSnackBar(
-    String msg, {
-    Color bg = const Color(0xFF323232),
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          msg,
-          style: const TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: bg,
-      ),
-    );
+  Future<void> _uploadQrFromGallery() async {
+    if (_scanning || _handled) return;
+
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 100,
+      );
+
+      if (picked == null) return;
+
+      setState(() => _scanning = true);
+
+      String? code;
+
+      try {
+        final inputImage = mlkit.InputImage.fromFilePath(picked.path);
+        final barcodeScanner = mlkit.BarcodeScanner(
+          formats: [mlkit.BarcodeFormat.qrCode],
+        );
+        final barcodes = await barcodeScanner.processImage(inputImage);
+        await barcodeScanner.close();
+
+        if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
+          code = barcodes.first.rawValue;
+          debugPrint('ML KIT DETECTED: [$code]');
+        }
+      } catch (e) {
+        debugPrint('ML Kit error: $e');
+      }
+
+      if (code == null || code.isEmpty) {
+        try {
+          final result = await fz.zx.readBarcodeImagePath(
+            picked,
+            fz.DecodeParams(
+              format: fz.Format.qrCode,
+              tryHarder: true,
+              tryRotate: true,
+            ),
+          );
+          if (result.isValid &&
+              result.text != null &&
+              result.text!.isNotEmpty) {
+            code = result.text;
+            debugPrint('ZXING DETECTED: [$code]');
+          }
+        } catch (e) {
+          debugPrint('ZXing error: $e');
+        }
+      }
+
+      if (!mounted) return;
+
+      if (code == null || code.isEmpty) {
+        setState(() => _scanning = false);
+        _showSnackBar(
+          'QR Code tidak ditemukan. Gunakan screenshot yang lebih jelas.',
+          bg: Colors.orange.shade700,
+        );
+        return;
+      }
+
+      setState(() => _scanning = false);
+      _handled = false;
+
+      await _processQr(code);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _scanning = false);
+      _handled = false;
+      _showSnackBar('Gagal membaca gambar: $e', bg: Colors.red);
+    }
   }
 
   @override
@@ -239,28 +256,20 @@ if (result == true) {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // ─────────────────────────────────────
-          // CAMERA
-          // ─────────────────────────────────────
           if (_cameraPermissionGranted)
             Positioned.fill(
               child: MobileScanner(
-                    controller: _cameraController,
-                    fit: BoxFit.cover,
-                    onDetect: (capture) async {
-                      if (_handled) return;
-
-                      final List<Barcode> barcodes = capture.barcodes;
-
-                      if (barcodes.isEmpty) return;
-
-                      final String? code = barcodes.first.rawValue;
-
-                      if (code == null || code.isEmpty) return;
-
-                      await _onDetect(code);
-                    },
-                  ),
+                controller: _cameraController,
+                fit: BoxFit.cover,
+                onDetect: (capture) async {
+                  if (_handled) return;
+                  final List<Barcode> barcodes = capture.barcodes;
+                  if (barcodes.isEmpty) return;
+                  final String? code = barcodes.first.rawValue;
+                  if (code == null || code.isEmpty) return;
+                  await _processQr(code);
+                },
+              ),
             )
           else
             Positioned.fill(
@@ -290,9 +299,6 @@ if (result == true) {
               ),
             ),
 
-          // ─────────────────────────────────────
-          // OVERLAY
-          // ─────────────────────────────────────
           Positioned.fill(
             child: CustomPaint(
               painter: OverlayPainter(
@@ -302,9 +308,6 @@ if (result == true) {
             ),
           ),
 
-          // ─────────────────────────────────────
-          // APPBAR
-          // ─────────────────────────────────────
           Positioned(
             top: 0,
             left: 0,
@@ -349,9 +352,6 @@ if (result == true) {
             ),
           ),
 
-          // ─────────────────────────────────────
-          // FRAME QR
-          // ─────────────────────────────────────
           Positioned(
             top: frameCenterY - frameSize / 2,
             left: (size.width - frameSize) / 2,
@@ -372,8 +372,6 @@ if (result == true) {
                     ),
                   ),
                 ),
-
-                // scan line
                 AnimatedBuilder(
                   animation: _scanLine,
                   builder: (_, __) => Positioned(
@@ -395,8 +393,6 @@ if (result == true) {
                     ),
                   ),
                 ),
-
-                // loading indicator
                 if (_scanning)
                   const Center(
                     child: CircularProgressIndicator(
@@ -408,9 +404,6 @@ if (result == true) {
             ),
           ),
 
-          // ─────────────────────────────────────
-          // TEXT
-          // ─────────────────────────────────────
           Positioned(
             bottom: size.height * 0.30,
             left: 0,
@@ -441,9 +434,6 @@ if (result == true) {
             ),
           ),
 
-          // ─────────────────────────────────────
-          // BOTTOM BUTTONS
-          // ─────────────────────────────────────
           Positioned(
             bottom: 48,
             left: 0,
@@ -458,24 +448,15 @@ if (result == true) {
                   label: 'Flash',
                   active: _flashOn,
                   onTap: () async {
-                    setState(() {
-                      _flashOn = !_flashOn;
-                    });
-
+                    setState(() => _flashOn = !_flashOn);
                     await _cameraController.toggleTorch();
                   },
                 ),
-
                 const SizedBox(width: 48),
-
                 ControlButton(
                   icon: Icons.photo_library_outlined,
                   label: 'Upload QR',
-                  onTap: () {
-                    _showSnackBar(
-                      'Fitur upload QR dari galeri segera hadir',
-                    );
-                  },
+                  onTap: _uploadQrFromGallery,
                 ),
               ],
             ),

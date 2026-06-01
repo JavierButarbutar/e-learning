@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 
-// ─────────────────────────────────────────────────────────────
-// OVERLAY PAINTER — gelap di luar frame QR
-// ─────────────────────────────────────────────────────────────
 class OverlayPainter extends CustomPainter {
   final double frameSize;
   final double centerY;
 
-  const OverlayPainter({
-    required this.frameSize,
-    required this.centerY,
-  });
+  const OverlayPainter({required this.frameSize, required this.centerY});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -29,9 +23,6 @@ class OverlayPainter extends CustomPainter {
   bool shouldRepaint(_) => false;
 }
 
-// ─────────────────────────────────────────────────────────────
-// FRAME PAINTER — sudut-sudut putih di dalam frame QR
-// ─────────────────────────────────────────────────────────────
 class FramePainter extends CustomPainter {
   final double len;
   final double radius;
@@ -46,23 +37,22 @@ class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size s) {
     final corners = [
-      // Top-left
       [Offset(0, len), Offset(0, radius), Offset(radius, 0), Offset(len, 0)],
-      // Top-right
+
       [
         Offset(s.width - len, 0),
         Offset(s.width - radius, 0),
         Offset(s.width, radius),
         Offset(s.width, len),
       ],
-      // Bottom-right
+
       [
         Offset(s.width, s.height - len),
         Offset(s.width, s.height - radius),
         Offset(s.width - radius, s.height),
         Offset(s.width - len, s.height),
       ],
-      // Bottom-left
+
       [
         Offset(len, s.height),
         Offset(radius, s.height),
