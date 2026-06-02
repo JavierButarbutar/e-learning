@@ -1,6 +1,6 @@
 class ApiEndpoint {
   static const String baseUrl =
-      "https://authorization-function-blend-highlight.trycloudflare.com/api";
+      "https://elearning-smkn1-tamanan.my.id/api";
 
   static const login = "$baseUrl/auth/login";
   static const checkEmail = "$baseUrl/auth/check-email";

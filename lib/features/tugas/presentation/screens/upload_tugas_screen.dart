@@ -12,6 +12,10 @@ import '../../widgets/tugas_info_card.dart';
 import '../../widgets/nilai_card.dart';
 import '../../widgets/file_jawaban_section.dart';
 
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+
 class UploadTugasScreen extends StatefulWidget {
   final String idTugas;
   final String judulTugas;
@@ -44,6 +48,8 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
   String? _statusPengumpulan;
   String? _nilai;
   String? _catatanGuru;
+  String? _fileGuruUrl;
+  String? _fileGuruNama;
 
   final _catatanCtrl = TextEditingController();
   bool _isLoading = false;
@@ -83,13 +89,22 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
           orElse: () => null,
         );
 
+        
+        final fileGuruUrl = tugasThis?['file_url'] as String?;
+
         final pengumpulan = tugasThis?['pengumpulan'];
 
-        if (pengumpulan != null) {
-          final fileUrl = pengumpulan['file_url'] as String?;
-          setState(() {
+        setState(() {
+          _fileGuruUrl = fileGuruUrl;
+          _fileGuruNama = fileGuruUrl != null
+              ? Uri.decodeFull(Uri.parse(fileGuruUrl).pathSegments.last)
+              : null;
+
+          
+          if (pengumpulan != null) {
+            final fileUrl = pengumpulan['file_url'] as String?;
             _fileTeruploadNama = fileUrl != null
-                ? Uri.decodeFull(fileUrl.split('/').last)
+                ? Uri.decodeFull(Uri.parse(fileUrl).pathSegments.last)
                 : null;
             _fileTeruploadUrl = fileUrl;
             _statusPengumpulan = pengumpulan['status'];
@@ -99,17 +114,15 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
             if (pengumpulan['jawaban'] != null && _catatanCtrl.text.isEmpty) {
               _catatanCtrl.text = pengumpulan['jawaban'];
             }
-          });
-        } else {
-          setState(() {
+          } else {
             _fileTeruploadNama = null;
             _fileTeruploadUrl = null;
             _statusPengumpulan = null;
             _sudahDinilai = false;
             _nilai = null;
             _catatanGuru = null;
-          });
-        }
+          }
+        });
       }
     } catch (e) {
       debugPrint('Gagal fetch status pengumpulan: $e');
@@ -117,6 +130,44 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
       if (mounted) setState(() => _isFetchingStatus = false);
     }
   }
+
+  Future<void> _bukaFileGuru() async {
+  if (_fileGuruUrl == null) {
+    _showSnackbar('File tidak tersedia', Colors.red);
+    return;
+  }
+
+  try {
+    _showSnackbar('Mengunduh file...', Colors.green);
+
+    final dir = await getTemporaryDirectory();
+
+    final fileName =
+        _fileGuruNama ??
+        Uri.parse(_fileGuruUrl!).pathSegments.last;
+
+    final savePath = '${dir.path}/$fileName';
+
+    await Dio().download(
+      _fileGuruUrl!,
+      savePath,
+    );
+
+    final result = await OpenFile.open(savePath);
+
+    if (result.type != ResultType.done) {
+      _showSnackbar(
+        'Tidak dapat membuka file',
+        Colors.red,
+      );
+    }
+  } catch (e) {
+    _showSnackbar(
+      'Gagal membuka file: $e',
+      Colors.red,
+    );
+  }
+}
 
   Future<void> _pilihFile() async {
     if (_fileTeruploadNama != null || _fileBaru != null) return;
@@ -274,7 +325,7 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
         final fileUrl = p['file_url'] as String?;
         setState(() {
           _fileTeruploadNama = fileUrl != null
-              ? Uri.decodeFull(fileUrl.split('/').last)
+              ? Uri.decodeFull(Uri.parse(fileUrl).pathSegments.last)
               : _namaFileBaru;
           _fileTeruploadUrl = fileUrl;
           _statusPengumpulan = p['status'];
@@ -376,6 +427,54 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
     );
   }
 
+  Widget _buildFileIcon(String namaFile) {
+    final ext = namaFile.split('.').last.toLowerCase();
+    IconData icon;
+    Color color;
+    Color bgColor;
+
+    switch (ext) {
+      case 'pdf':
+        icon = Icons.picture_as_pdf_outlined;
+        color = const Color(0xFFE53935);
+        bgColor = const Color(0xFFFFEBEE);
+        break;
+      case 'doc':
+      case 'docx':
+        icon = Icons.description_outlined;
+        color = const Color(0xFF1565C0);
+        bgColor = const Color(0xFFE3F2FD);
+        break;
+      case 'ppt':
+      case 'pptx':
+        icon = Icons.slideshow_outlined;
+        color = const Color(0xFFE65100);
+        bgColor = const Color(0xFFFFF3E0);
+        break;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        icon = Icons.image_outlined;
+        color = const Color(0xFF6A1B9A);
+        bgColor = const Color(0xFFF3E5F5);
+        break;
+      default:
+        icon = Icons.insert_drive_file_outlined;
+        color = const Color(0xFF2E7D32);
+        bgColor = const Color(0xFFE8F5E9);
+    }
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: color, size: 22),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bisaSerahkan =
@@ -441,6 +540,73 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
                           deadline: widget.deadline,
                           namaMapel: widget.namaMapel,
                         ),
+
+                        
+                        if (_fileGuruUrl != null) ...[
+                          const SizedBox(height: 20),
+                          const Text(
+                            'File Soal',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: _bukaFileGuru,
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0xFF1565C0),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  _buildFileIcon(_fileGuruNama ?? 'file'),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _fileGuruNama ?? 'File Tugas',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF1A1A1A),
+                                            fontFamily: 'Poppins',
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 3),
+                                        const Text(
+                                          'Tap untuk membuka file',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF1565C0),
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.open_in_new_rounded,
+                                    size: 18,
+                                    color: Color(0xFF1565C0),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
 
                         if (_sudahDinilai && _nilai != null) ...[
                           const SizedBox(height: 14),

@@ -4,10 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/notifikasi_model.dart';
 import '../../../../core/storage/shared_pref.dart';
+import '../../../../core/constants/api_endpoints.dart';
 
 class NotifikasiRepository {
-  static const String _baseUrl =
-      'https://authorization-function-blend-highlight.trycloudflare.com/api'; 
   static Future<Map<String, dynamic>> getNotifikasi({int page = 1}) async {
     try {
       final token = await SharedPref.getToken();
@@ -15,7 +14,7 @@ class NotifikasiRepository {
       print("TOKEN: $token");
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/notifikasi?page=$page&per_page=20'),
+        Uri.parse('${ApiEndpoint.notifikasi}?page=$page&per_page=20'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -46,7 +45,7 @@ class NotifikasiRepository {
   static Future<int> getUnreadCount() async {
     final token = await SharedPref.getToken();
     final response = await http.get(
-      Uri.parse('$_baseUrl/notifikasi/unread-count'),
+      Uri.parse(ApiEndpoint.unreadNotifikasi),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
 
@@ -60,7 +59,7 @@ class NotifikasiRepository {
   static Future<void> bacaNotifikasi(int id) async {
     final token = await SharedPref.getToken();
     await http.post(
-      Uri.parse('$_baseUrl/notifikasi/$id/baca'),
+      Uri.parse(ApiEndpoint.bacaNotifikasi(id)),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
   }
@@ -68,7 +67,7 @@ class NotifikasiRepository {
   static Future<void> bacaSemua() async {
     final token = await SharedPref.getToken();
     await http.post(
-      Uri.parse('$_baseUrl/notifikasi/baca-semua'),
+      Uri.parse(ApiEndpoint.bacaSemuaNotifikasi),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
   }
@@ -85,8 +84,7 @@ class NotifikasiRepository {
     try {
       final response = await http
           .post(
-
-            Uri.parse('$_baseUrl/notifikasi/update-token'),
+            Uri.parse(ApiEndpoint.updateFcmToken),
             headers: {
               'Authorization': 'Bearer $token',
               'Accept': 'application/json',
