@@ -1,4 +1,3 @@
-
 enum TipeSoal { pilihanGanda, esai }
  
 
@@ -93,7 +92,7 @@ class SoalModel {
       nomor: json['nomor_urut'] ?? 0,
       pertanyaan: json['pertanyaan'] ?? '',
       tipe: tipe,
-      gambarSoalUrl: json['gambar'],
+      gambarSoalUrl: json['gambar_url'] ?? json['gambar'],
       pilihan: pilihan,
     );
   }

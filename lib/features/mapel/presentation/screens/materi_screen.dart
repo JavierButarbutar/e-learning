@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../data/models/mapel_model.dart';
 import '../../provider/mapel_provider.dart';
 import 'detail_materi_screen.dart';
-import '../../../kuis/presentation/screens/kuis_screen.dart';
 import '../../../kuis/presentation/screens/kuis_detail_screen.dart';
 
 class MateriScreen extends StatefulWidget {

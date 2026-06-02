@@ -78,12 +78,21 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
 
   List<JadwalItem> get _jadwalHariIni => _jadwalMap[_selectedHari] ?? [];
 
-  JadwalItem? get _jadwalAktif {
-    for (final j in _jadwalHariIni) {
-      if (j.sedangBerlangsung) return j;
-    }
+JadwalItem? get _jadwalAktif {
+
+  final now = DateTime.now();
+
+  final hariIni = namaHari(now);
+
+  if (_selectedHari != hariIni) {
     return null;
   }
+
+  return _jadwalHariIni.cast<JadwalItem?>().firstWhere(
+    (j) => j?.sedangBerlangsung == true,
+    orElse: () => null,
+  );
+}
 
   String _tanggalHariIni() {
     const hari = [
@@ -319,73 +328,142 @@ class _DashboardGuruScreenState extends State<DashboardGuruScreen> {
 
 class _ActiveClassBanner extends StatelessWidget {
   final JadwalItem item;
-  const _ActiveClassBanner({required this.item});
+
+  const _ActiveClassBanner({
+    required this.item,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF43A047),
+            Color(0xFF2E7D32),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
+
           Container(
-            width: 38,
-            height: 38,
-            decoration: const BoxDecoration(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
               shape: BoxShape.circle,
-              color: Color(0xFFF5A623),
             ),
             child: const Icon(
-              Icons.volume_up_rounded,
+              Icons.schedule_rounded,
               color: Colors.white,
-              size: 20,
+              size: 28,
             ),
           ),
-          const SizedBox(width: 12),
+
+          const SizedBox(width: 14),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Saatnya mengajar di',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white70,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                Text(
-                  '${item.namaKelas} ${item.mataPelajaran}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'Sedang Berlangsung',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      fontFamily: 'Poppins',
+
+                Row(
+                  children: [
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
                     ),
+
+                    const SizedBox(width: 8),
+
+                    const Text(
+                      'Sedang Berlangsung',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  item.mataPelajaran,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Poppins',
                   ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  item.namaKelas,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 14,
+                      color: Colors.white70,
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    Text(
+                      "${item.jamMulai} - ${item.jamSelesai}",
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

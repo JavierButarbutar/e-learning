@@ -11,7 +11,7 @@ class InformasiPribadiScreen extends StatefulWidget {
 class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
   String nama = '-';
   String foto = '';
-  String nisn = '-';
+  String nis = '-';
   String kelas = '-';
 
   bool _loading = true;
@@ -30,7 +30,7 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
     setState(() {
       nama = user?['name'] ?? '-';
       foto = (user?['foto'] ?? '').toString();
-      nisn = user?['nisn'] ?? '-';
+      nis = user?['nis'] ?? '-';
       kelas = user?['kelas'] ?? '-';
       _loading = false;
     });
@@ -149,7 +149,7 @@ class _InformasiPribadiScreenState extends State<InformasiPribadiScreen> {
 
                               const _DividerLine(),
 
-                              _infoItem('NISN', nisn),
+                              _infoItem('NIS', nis),
 
                               const _DividerLine(),
 
