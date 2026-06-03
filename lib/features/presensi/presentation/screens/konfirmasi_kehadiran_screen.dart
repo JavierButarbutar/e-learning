@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 import '../../data/models/presensi_model.dart';
 import '../../provider/presensi_provider.dart';
@@ -30,49 +31,56 @@ class _KonfirmasiKehadiranScreenState extends State<KonfirmasiKehadiranScreen> {
     _getLocation();
   }
 
-  Future<void> _getLocation() async {
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+Future<void> _getLocation() async {
+  try {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
-      if (!serviceEnabled) {
-        setState(() {
-          _gpsError = 'GPS tidak aktif';
-          _gpsLoading = false;
-        });
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        setState(() {
-          _gpsError = 'Izin lokasi ditolak';
-          _gpsLoading = false;
-        });
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
+    if (!serviceEnabled) {
       setState(() {
-        _latitude = position.latitude.toString();
-        _longitude = position.longitude.toString();
+        _gpsError = 'GPS tidak aktif';
         _gpsLoading = false;
       });
-    } catch (e) {
-      setState(() {
-        _gpsError = e.toString();
-        _gpsLoading = false;
-      });
+      return;
     }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      setState(() {
+        _gpsError = 'Izin lokasi ditolak';
+        _gpsLoading = false;
+      });
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 15),
+    );
+
+    setState(() {
+      _latitude = position.latitude.toString();
+      _longitude = position.longitude.toString();
+      _gpsLoading = false;
+    });
+
+  } on TimeoutException {
+    setState(() {
+      _gpsError = 'GPS timeout. Pastikan GPS aktif dan sinyal tersedia.';
+      _gpsLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _gpsError = e.toString();
+      _gpsLoading = false;
+    });
   }
+}
 
   Future<void> _checkIn() async {
     final provider = context.read<PresensiProvider>();

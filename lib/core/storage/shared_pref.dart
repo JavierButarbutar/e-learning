@@ -8,6 +8,7 @@ class SharedPref {
   static const String _isLoginKey = 'is_login';
   static const String _tokenKey = 'token';
   static const String _userKey = 'user';
+  static const String _fcmTokenKey = 'fcm_token'; // TAMBAHAN
 
   static Future<SharedPreferences> _prefs() async {
     return await SharedPreferences.getInstance();
@@ -109,12 +110,23 @@ class SharedPref {
     return prefs.getBool(_rememberKey) ?? false;
   }
 
+  static Future<void> saveFcmToken(String fcmToken) async {
+    final prefs = await _prefs();
+    await prefs.setString(_fcmTokenKey, fcmToken);
+  }
+
+  static Future<String?> getFcmToken() async {
+    final prefs = await _prefs();
+    return prefs.getString(_fcmTokenKey);
+  }
+
   static Future<void> logout() async {
     final prefs = await _prefs();
 
     await prefs.setBool(_isLoginKey, false);
     await prefs.remove(_tokenKey);
     await prefs.remove(_userKey);
+    await prefs.remove(_fcmTokenKey); // TAMBAHAN — hapus FCM token saat logout
 
     bool remember = prefs.getBool(_rememberKey) ?? false;
 

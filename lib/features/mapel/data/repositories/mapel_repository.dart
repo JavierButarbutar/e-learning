@@ -30,63 +30,80 @@ class MapelRepository {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
+      // Kumpulkan semua id materi dulu
+      final List<Map<String, dynamic>> allMateriRaw = [];
       for (var minggu in data['data']) {
         final materiList = minggu['materi'] as List;
-
         for (var m in materiList) {
-          final idMateri = m['id_materi'].toString();
+          allMateriRaw.add(m);
+        }
+      }
 
-          final detailRes = await http.get(
-            Uri.parse(ApiEndpoint.detailMateri(idMateri)),
-            headers: headers,
-          );
+      // FETCH SEMUA DETAIL SEKALIGUS (parallel), bukan satu per satu
+      final detailFutures = allMateriRaw.map((m) async {
+        final idMateri = m['id_materi'].toString();
+        try {
+          final detailRes = await http
+              .get(
+                Uri.parse(ApiEndpoint.detailMateri(idMateri)),
+                headers: headers,
+              )
+              .timeout(const Duration(seconds: 10));
 
           if (detailRes.statusCode == 200) {
             final detailData = jsonDecode(detailRes.body);
-            allMateri.add(MateriItem.fromJson(detailData['data']));
-          } else {
-            allMateri.add(MateriItem.fromJson(m));
+            return MateriItem.fromJson(detailData['data']);
           }
+          return MateriItem.fromJson(m);
+        } catch (_) {
+          // Kalau detail gagal, pakai data ringkas dari list
+          return MateriItem.fromJson(m);
         }
-      }
+      });
+
+      // Tunggu semua selesai bersamaan
+      allMateri = await Future.wait(detailFutures);
     } else {
       throw Exception('Gagal mengambil materi');
     }
 
-    final kuisRes = await http.get(
-      Uri.parse(ApiEndpoint.kuis),
-      headers: headers,
-    );
+    // Fetch kuis juga parallel dengan materi sudah selesai
+    try {
+      final kuisRes = await http
+          .get(Uri.parse(ApiEndpoint.kuis), headers: headers)
+          .timeout(const Duration(seconds: 10));
 
-    if (kuisRes.statusCode == 200) {
-      final kuisData = jsonDecode(kuisRes.body);
-      final kuisList = kuisData['data'] as List? ?? [];
+      if (kuisRes.statusCode == 200) {
+        final kuisData = jsonDecode(kuisRes.body);
+        final kuisList = kuisData['data'] as List? ?? [];
 
-      for (var k in kuisList) {
-        final mapelId =
-            k['mapel']?['id_mapel']?.toString() ??
-            k['mapel_id']?.toString() ??
-            k['id_mapel']?.toString() ??
-            '';
+        for (var k in kuisList) {
+          final mapelId =
+              k['mapel']?['id_mapel']?.toString() ??
+              k['mapel_id']?.toString() ??
+              k['id_mapel']?.toString() ??
+              '';
 
-        if (mapelId.isEmpty || mapelId != idMapel) continue;
+          if (mapelId.isEmpty || mapelId != idMapel) continue;
 
-        final tipeKuisStr = k['tipe_kuis']?.toString() ?? k['tipe']?.toString();
+          final tipeKuisStr =
+              k['tipe_kuis']?.toString() ?? k['tipe']?.toString();
 
-        allMateri.add(
-          MateriItem(
-            id: k['id_kuis'].toString(),
-            nomor: k['minggu_ke']?.toString() ?? '0',
-            judul: k['judul_kuis'] ?? k['judul'] ?? 'Kuis',
-            tanggal: k['tanggal_mulai'],
-            type: MateriType.kuis,
-            jumlahSoal: k['jumlah_soal'],
-            durasiMenit: k['durasi_menit'],
-            tipeKuis: TipeKuisMateriX.fromString(tipeKuisStr),
-          ),
-        );
+          allMateri.add(
+            MateriItem(
+              id: k['id_kuis'].toString(),
+              nomor: k['minggu_ke']?.toString() ?? '0',
+              judul: k['judul_kuis'] ?? k['judul'] ?? 'Kuis',
+              tanggal: k['tanggal_mulai'],
+              type: MateriType.kuis,
+              jumlahSoal: k['jumlah_soal'],
+              durasiMenit: k['durasi_menit'],
+              tipeKuis: TipeKuisMateriX.fromString(tipeKuisStr),
+            ),
+          );
+        }
       }
-    }
+    } catch (_) {}
 
     return allMateri;
   }

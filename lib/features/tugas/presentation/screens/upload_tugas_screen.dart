@@ -89,7 +89,6 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
           orElse: () => null,
         );
 
-        
         final fileGuruUrl = tugasThis?['file_url'] as String?;
 
         final pengumpulan = tugasThis?['pengumpulan'];
@@ -100,7 +99,6 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
               ? Uri.decodeFull(Uri.parse(fileGuruUrl).pathSegments.last)
               : null;
 
-          
           if (pengumpulan != null) {
             final fileUrl = pengumpulan['file_url'] as String?;
             _fileTeruploadNama = fileUrl != null
@@ -132,42 +130,32 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
   }
 
   Future<void> _bukaFileGuru() async {
-  if (_fileGuruUrl == null) {
-    _showSnackbar('File tidak tersedia', Colors.red);
-    return;
-  }
-
-  try {
-    _showSnackbar('Mengunduh file...', Colors.green);
-
-    final dir = await getTemporaryDirectory();
-
-    final fileName =
-        _fileGuruNama ??
-        Uri.parse(_fileGuruUrl!).pathSegments.last;
-
-    final savePath = '${dir.path}/$fileName';
-
-    await Dio().download(
-      _fileGuruUrl!,
-      savePath,
-    );
-
-    final result = await OpenFile.open(savePath);
-
-    if (result.type != ResultType.done) {
-      _showSnackbar(
-        'Tidak dapat membuka file',
-        Colors.red,
-      );
+    if (_fileGuruUrl == null) {
+      _showSnackbar('File tidak tersedia', Colors.red);
+      return;
     }
-  } catch (e) {
-    _showSnackbar(
-      'Gagal membuka file: $e',
-      Colors.red,
-    );
+
+    try {
+      _showSnackbar('Mengunduh file...', Colors.green);
+
+      final dir = await getTemporaryDirectory();
+
+      final fileName =
+          _fileGuruNama ?? Uri.parse(_fileGuruUrl!).pathSegments.last;
+
+      final savePath = '${dir.path}/$fileName';
+
+      await Dio().download(_fileGuruUrl!, savePath);
+
+      final result = await OpenFile.open(savePath);
+
+      if (result.type != ResultType.done) {
+        _showSnackbar('Tidak dapat membuka file', Colors.red);
+      }
+    } catch (e) {
+      _showSnackbar('Gagal membuka file: $e', Colors.red);
+    }
   }
-}
 
   Future<void> _pilihFile() async {
     if (_fileTeruploadNama != null || _fileBaru != null) return;
@@ -541,7 +529,6 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
                           namaMapel: widget.namaMapel,
                         ),
 
-                        
                         if (_fileGuruUrl != null) ...[
                           const SizedBox(height: 20),
                           const Text(
@@ -762,7 +749,6 @@ class _UploadTugasScreenState extends State<UploadTugasScreen> {
                               ),
                             ),
                           ),
-
                         const SizedBox(height: 24),
                       ],
                     ),

@@ -21,9 +21,7 @@ class NotifikasiRepository {
         },
       );
 
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
-
+      
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final List list = body['data'] ?? [];
@@ -37,7 +35,6 @@ class NotifikasiRepository {
 
       throw Exception(response.body);
     } catch (e) {
-      print("ERROR NOTIFIKASI: $e");
       rethrow;
     }
   }
@@ -75,11 +72,8 @@ class NotifikasiRepository {
   static Future<void> updateFcmToken(String fcmToken) async {
     final token = await SharedPref.getToken();
     if (token == null) {
-      debugPrint("FCM UPDATE SKIP: auth token null");
       return;
     }
-
-    debugPrint("KIRIM FCM TOKEN: $fcmToken");
 
     try {
       final response = await http
@@ -94,17 +88,13 @@ class NotifikasiRepository {
           )
           .timeout(const Duration(seconds: 8));
 
-      debugPrint(
-        "RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}",
-      );
-
+      
       if (response.statusCode != 200) {
-        debugPrint("FCM token update failed: ${response.statusCode}");
+
       }
     } on TimeoutException {
-      debugPrint("FCM token update timeout");
+
     } catch (e) {
-      debugPrint("FCM token update error: $e");
     }
   }
 }
