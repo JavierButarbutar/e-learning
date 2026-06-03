@@ -24,16 +24,14 @@ import 'features/guru/notifikasi/provider/notifikasi_guru_provider.dart';
 import 'features/notifikasi/data/services/notifikasi_service.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
 
+  // Background handler harus didaftarkan sebelum runApp
   FirebaseMessaging.onBackgroundMessage(
     firebaseMessagingBackgroundHandler,
   );
-
-  await NotifikasiService.init();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -46,82 +44,72 @@ void main() async {
     ),
   );
 
+  // init() TIDAK dipanggil di sini karena provider belum ada
+  // Dipindah ke MyApp setelah provider tersedia
+
   runApp(
     MultiProvider(
       providers: [
-
         ChangeNotifierProvider(
           create: (_) => MapelProvider(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => PresensiProvider(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => AuthProvider(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => KuisProvider(),
         ),
-
         ChangeNotifierProvider(
           create: (_) => NotifikasiProvider(),
         ),
-
         ChangeNotifierProvider(
-            create: (_) => NotifikasiGuruProvider(), 
+          create: (_) => NotifikasiGuruProvider(),
         ),
-
       ],
-
       child: const MyApp(),
     ),
   );
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-class MyApp extends StatelessWidget {
 
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<MyApp> createState() => _MyAppState();
+}
 
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Provider sudah tersedia di sini karena MyApp sudah di dalam MultiProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final notifProvider = context.read<NotifikasiProvider>();
+      await NotifikasiService.init(provider: notifProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-
       title: 'E-Learning SMKN 1 Tamanan',
-
       debugShowCheckedModeBanner: false,
-
       theme: AppTheme.theme,
-
       initialRoute: '/splash',
-
       routes: {
-
-        '/splash': (_) =>
-            const SplashScreen(seenOnboarding: true),
-
-        '/login': (_) =>
-            const LoginScreen(),
-
-        '/forgot-password': (_) =>
-            const ForgotPasswordScreen(),
-
-        '/reset-password': (_) =>
-            const ResetPasswordScreen(),
-
-        '/otp': (_) =>
-            const OtpScreen(),
-
-        '/home': (_) =>
-            const MainScaffold(),
-
-        '/home-guru': (_) =>
-            const MainGuruScaffold(),
+        '/splash': (_) => const SplashScreen(seenOnboarding: true),
+        '/login': (_) => const LoginScreen(),
+        '/forgot-password': (_) => const ForgotPasswordScreen(),
+        '/reset-password': (_) => const ResetPasswordScreen(),
+        '/otp': (_) => const OtpScreen(),
+        '/home': (_) => const MainScaffold(),
+        '/home-guru': (_) => const MainGuruScaffold(),
       },
     );
   }

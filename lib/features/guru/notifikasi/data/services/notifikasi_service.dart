@@ -1,13 +1,14 @@
 import 'dart:convert';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart'; // untuk debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../repositories/notifikasi_guru_repository.dart'; // sesuaikan import path
+import '../repositories/notifikasi_guru_repository.dart';
+import '../../../../../core/storage/shared_pref.dart';
+import '../../provider/notifikasi_guru_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("NOTIF BACKGROUND : ${message.notification?.title}");
+  debugPrint('NOTIF BACKGROUND: ${message.notification?.title}');
 }
 
 class NotificationService {
@@ -17,7 +18,7 @@ class NotificationService {
   static const _channelId = 'elearning_channel';
   static const _channelName = 'E-Learning Notifikasi';
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({NotifikasiGuruProvider? provider}) async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -30,10 +31,10 @@ class NotificationService {
     );
 
     await _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(
+    .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin
+    >()
+    ?.createNotificationChannel(
           const AndroidNotificationChannel(
             _channelId,
             _channelName,
@@ -49,33 +50,47 @@ class NotificationService {
     );
 
     final fcmToken = await FirebaseMessaging.instance.getToken();
-    debugPrint("FCM TOKEN: $fcmToken");
+    debugPrint('FCM TOKEN: $fcmToken');
+
     if (fcmToken != null) {
-      await NotifikasiGuruRepository.updateFcmToken(
-        fcmToken,
-      ); // ← ini yang kurang
+      // Hanya kirim ke server kalau token berubah
+      final savedToken = await SharedPref.getFcmToken();
+      if (savedToken != fcmToken) {
+        await NotifikasiGuruRepository.updateFcmToken(fcmToken);
+        await SharedPref.saveFcmToken(fcmToken);
+        debugPrint('FCM TOKEN: updated to server');
+      } else {
+        debugPrint('FCM TOKEN: sama, skip update ke server');
+      }
     }
 
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      NotifikasiGuruRepository.updateFcmToken(newToken).catchError((e) {
-        print("FCM token refresh failed: $e");
-      });
+    // Token refresh = pasti beda, langsung update
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      try {
+        await NotifikasiGuruRepository.updateFcmToken(newToken);
+        await SharedPref.saveFcmToken(newToken);
+        debugPrint('FCM TOKEN: refreshed and saved');
+      } catch (e) {
+        debugPrint('FCM token refresh failed: $e');
+      }
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("NOTIF FOREGROUND : ${message.notification?.title}");
+      debugPrint('NOTIF FOREGROUND: ${message.notification?.title}');
+
+      // Update badge tanpa hit API
+      provider?.incrementUnreadCount();
+
       showNotification(message);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      print("NOTIF DIKLIK BACKGROUND : ${message.data}");
+      debugPrint('NOTIF DIKLIK BACKGROUND: ${message.data}');
     });
 
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
-      print("APP DIBUKA DARI NOTIF : ${initialMessage.data}");
+      debugPrint('APP DIBUKA DARI NOTIF: ${initialMessage.data}');
     }
   }
 

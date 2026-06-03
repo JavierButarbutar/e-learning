@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/notifikasi_guru_model.dart';
 import '../../../../../core/storage/shared_pref.dart';
@@ -19,9 +19,6 @@ class NotifikasiGuruRepository {
         },
       );
 
-      print("GURU NOTIF STATUS: ${response.statusCode}");
-      print("GURU NOTIF BODY: ${response.body}");
-
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final List list = body['data'] ?? [];
@@ -38,7 +35,7 @@ class NotifikasiGuruRepository {
 
       throw Exception(response.body);
     } catch (e) {
-      print("ERROR GURU NOTIF: $e");
+      debugPrint('ERROR GURU NOTIF: $e');
       rethrow;
     }
   }
@@ -47,7 +44,10 @@ class NotifikasiGuruRepository {
     final token = await SharedPref.getToken();
     await http.post(
       Uri.parse(ApiEndpoint.bacaNotifikasi(id)),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
     );
   }
 
@@ -55,15 +55,16 @@ class NotifikasiGuruRepository {
     final token = await SharedPref.getToken();
     await http.post(
       Uri.parse(ApiEndpoint.bacaSemuaNotifikasi),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
     );
   }
 
   static Future<void> updateFcmToken(String fcmToken) async {
     final token = await SharedPref.getToken();
     if (token == null) return;
-
-    debugPrint("KIRIM FCM TOKEN: $fcmToken");
 
     try {
       final response = await http
@@ -78,17 +79,11 @@ class NotifikasiGuruRepository {
           )
           .timeout(const Duration(seconds: 8));
 
-      debugPrint(
-        "RESPONSE UPDATE TOKEN: ${response.statusCode} ${response.body}",
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint("FCM token update failed: ${response.statusCode}");
-      }
+      debugPrint('UPDATE FCM TOKEN: ${response.statusCode}');
     } on TimeoutException {
-      debugPrint("FCM token update timeout");
+      debugPrint('UPDATE FCM TOKEN: timeout');
     } catch (e) {
-      debugPrint("FCM token update error: $e");
+      debugPrint('UPDATE FCM TOKEN error: $e');
     }
   }
 }

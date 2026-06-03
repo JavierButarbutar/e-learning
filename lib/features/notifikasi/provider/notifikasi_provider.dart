@@ -9,12 +9,14 @@ class NotifikasiProvider extends ChangeNotifier {
   String? _error;
   int _currentPage = 1;
   bool _hasMore = true;
+  bool _isLoadingMore = false;
 
   List<NotifikasiModel> get list => _list;
   int get unreadCount => _unreadCount;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMore => _hasMore;
+  bool get isLoadingMore => _isLoadingMore;
 
   Future<void> loadNotifikasi({bool refresh = false}) async {
     if (refresh) {
@@ -25,7 +27,13 @@ class NotifikasiProvider extends ChangeNotifier {
 
     if (_isLoading || !_hasMore) return;
 
-    _isLoading = true;
+    // Bedakan loading pertama vs load more
+    if (_currentPage == 1) {
+      _isLoading = true;
+    } else {
+      _isLoadingMore = true;
+    }
+
     _error = null;
     notifyListeners();
 
@@ -48,6 +56,7 @@ class NotifikasiProvider extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      _isLoadingMore = false;
       notifyListeners();
     }
   }
@@ -89,8 +98,20 @@ class NotifikasiProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshUnreadCount() async {
-    _unreadCount = await NotifikasiRepository.getUnreadCount();
+  // Dipanggil oleh FCM push saat app foreground, tanpa hit API
+  void incrementUnreadCount() {
+    _unreadCount++;
     notifyListeners();
+  }
+
+  // Dipanggil hanya saat buka halaman notifikasi atau app resume,
+  // BUKAN dari polling/timer
+  Future<void> refreshUnreadCount() async {
+    try {
+      _unreadCount = await NotifikasiRepository.getUnreadCount();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshUnreadCount error: $e');
+    }
   }
 }

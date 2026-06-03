@@ -17,19 +17,30 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Load sekali saat buka halaman, bukan polling
       context.read<NotifikasiProvider>().loadNotifikasi(refresh: true);
     });
 
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        context.read<NotifikasiProvider>().loadNotifikasi();
-      }
-    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final provider = context.read<NotifikasiProvider>();
+
+    // Guard: skip kalau sedang loading atau tidak ada halaman berikutnya
+    if (provider.isLoading || provider.isLoadingMore || !provider.hasMore) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    if (currentScroll >= maxScroll - 200) {
+      provider.loadNotifikasi();
+    }
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -60,26 +71,34 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         ),
         centerTitle: false,
         actions: [
-          TextButton(
-            onPressed: () => context.read<NotifikasiProvider>().bacaSemua(),
-            child: const Text(
-              'Tandai dibaca',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF2E7D32),
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          Consumer<NotifikasiProvider>(
+            builder: (context, prov, _) {
+              // Sembunyikan tombol kalau semua sudah dibaca
+              if (prov.unreadCount == 0) return const SizedBox.shrink();
+              return TextButton(
+                onPressed: () => prov.bacaSemua(),
+                child: const Text(
+                  'Tandai dibaca',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2E7D32),
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
       body: Consumer<NotifikasiProvider>(
         builder: (context, prov, _) {
+          // Loading pertama kali
           if (prov.isLoading && prov.list.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          // Error dan list kosong
           if (prov.error != null && prov.list.isEmpty) {
             return Center(
               child: Column(
@@ -90,7 +109,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   Text(
                     prov.error!,
                     style: const TextStyle(fontFamily: 'Poppins'),
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 8),
                   TextButton(
                     onPressed: () => prov.loadNotifikasi(refresh: true),
                     child: const Text('Coba Lagi'),
@@ -100,11 +121,26 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             );
           }
 
+          // List kosong
           if (prov.list.isEmpty) {
             return const Center(
-              child: Text(
-                'Belum ada notifikasi',
-                style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.notifications_off_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Belum ada notifikasi',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -114,17 +150,20 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             child: ListView.separated(
               controller: _scrollController,
               padding: const EdgeInsets.all(14),
+              // +1 untuk loading indicator di bawah saat load more
               itemCount: prov.list.length + (prov.hasMore ? 1 : 0),
               separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (_, i) {
+                // Loading indicator di paling bawah list
                 if (i == prov.list.length) {
                   return const Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   );
                 }
+
                 final notif = prov.list[i];
                 return NotifikasiItem(
                   notif: notif,

@@ -6,6 +6,7 @@ class NotifikasiGuruProvider extends ChangeNotifier {
   List<NotifikasiGuruModel> _list = [];
   int _unreadCount = 0;
   bool _isLoading = false;
+  bool _isLoadingMore = false; // TAMBAHAN
   String? _error;
   int _currentPage = 1;
   bool _hasMore = true;
@@ -13,6 +14,7 @@ class NotifikasiGuruProvider extends ChangeNotifier {
   List<NotifikasiGuruModel> get list => _list;
   int get unreadCount => _unreadCount;
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore; // TAMBAHAN
   String? get error => _error;
   bool get hasMore => _hasMore;
 
@@ -23,9 +25,15 @@ class NotifikasiGuruProvider extends ChangeNotifier {
       _list = [];
     }
 
-    if (_isLoading || !_hasMore) return;
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
 
-    _isLoading = true;
+    // Bedakan loading pertama vs load more
+    if (_currentPage == 1) {
+      _isLoading = true;
+    } else {
+      _isLoadingMore = true;
+    }
+
     _error = null;
     notifyListeners();
 
@@ -48,6 +56,7 @@ class NotifikasiGuruProvider extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      _isLoadingMore = false;
       notifyListeners();
     }
   }
@@ -87,5 +96,23 @@ class NotifikasiGuruProvider extends ChangeNotifier {
         .toList();
     _unreadCount = 0;
     notifyListeners();
+  }
+
+  // Dipanggil FCM push saat foreground, tanpa hit API
+  void incrementUnreadCount() {
+    _unreadCount++;
+    notifyListeners();
+  }
+
+  // Dipanggil hanya saat buka halaman, BUKAN polling
+  Future<void> refreshUnreadCount() async {
+    try {
+      // Guru pakai endpoint yang sama, ambil dari unread_count response
+      final result = await NotifikasiGuruRepository.getNotifikasi(page: 1);
+      _unreadCount = result['unread_count'] ?? 0;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshUnreadCount guru error: $e');
+    }
   }
 }
